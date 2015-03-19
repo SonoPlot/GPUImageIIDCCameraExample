@@ -1,0 +1,416 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		79E62F221ABB211A00019A4E /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 79E62F211ABB211A00019A4E /* AppDelegate.m */; };
+		79E62F241ABB211A00019A4E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 79E62F231ABB211A00019A4E /* main.m */; };
+		79E62F261ABB211A00019A4E /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 79E62F251ABB211A00019A4E /* Images.xcassets */; };
+		79E62F291ABB211A00019A4E /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 79E62F271ABB211A00019A4E /* MainMenu.xib */; };
+		79E62F351ABB211A00019A4E /* GPUImageIIDCCameraExampleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 79E62F341ABB211A00019A4E /* GPUImageIIDCCameraExampleTests.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		79E62F2F1ABB211A00019A4E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 79E62F131ABB211A00019A4E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 79E62F1A1ABB211A00019A4E;
+			remoteInfo = GPUImageIIDCCameraExample;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		79E62F1B1ABB211A00019A4E /* GPUImageIIDCCameraExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GPUImageIIDCCameraExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		79E62F1F1ABB211A00019A4E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		79E62F201ABB211A00019A4E /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		79E62F211ABB211A00019A4E /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		79E62F231ABB211A00019A4E /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		79E62F251ABB211A00019A4E /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		79E62F281ABB211A00019A4E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		79E62F2E1ABB211A00019A4E /* GPUImageIIDCCameraExampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GPUImageIIDCCameraExampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		79E62F331ABB211A00019A4E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		79E62F341ABB211A00019A4E /* GPUImageIIDCCameraExampleTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GPUImageIIDCCameraExampleTests.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		79E62F181ABB211A00019A4E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		79E62F2B1ABB211A00019A4E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		79E62F121ABB211A00019A4E = {
+			isa = PBXGroup;
+			children = (
+				79E62F1D1ABB211A00019A4E /* GPUImageIIDCCameraExample */,
+				79E62F311ABB211A00019A4E /* GPUImageIIDCCameraExampleTests */,
+				79E62F1C1ABB211A00019A4E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		79E62F1C1ABB211A00019A4E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				79E62F1B1ABB211A00019A4E /* GPUImageIIDCCameraExample.app */,
+				79E62F2E1ABB211A00019A4E /* GPUImageIIDCCameraExampleTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		79E62F1D1ABB211A00019A4E /* GPUImageIIDCCameraExample */ = {
+			isa = PBXGroup;
+			children = (
+				79E62F201ABB211A00019A4E /* AppDelegate.h */,
+				79E62F211ABB211A00019A4E /* AppDelegate.m */,
+				79E62F251ABB211A00019A4E /* Images.xcassets */,
+				79E62F271ABB211A00019A4E /* MainMenu.xib */,
+				79E62F1E1ABB211A00019A4E /* Supporting Files */,
+			);
+			path = GPUImageIIDCCameraExample;
+			sourceTree = "<group>";
+		};
+		79E62F1E1ABB211A00019A4E /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				79E62F1F1ABB211A00019A4E /* Info.plist */,
+				79E62F231ABB211A00019A4E /* main.m */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		79E62F311ABB211A00019A4E /* GPUImageIIDCCameraExampleTests */ = {
+			isa = PBXGroup;
+			children = (
+				79E62F341ABB211A00019A4E /* GPUImageIIDCCameraExampleTests.m */,
+				79E62F321ABB211A00019A4E /* Supporting Files */,
+			);
+			path = GPUImageIIDCCameraExampleTests;
+			sourceTree = "<group>";
+		};
+		79E62F321ABB211A00019A4E /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				79E62F331ABB211A00019A4E /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		79E62F1A1ABB211A00019A4E /* GPUImageIIDCCameraExample */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 79E62F381ABB211A00019A4E /* Build configuration list for PBXNativeTarget "GPUImageIIDCCameraExample" */;
+			buildPhases = (
+				79E62F171ABB211A00019A4E /* Sources */,
+				79E62F181ABB211A00019A4E /* Frameworks */,
+				79E62F191ABB211A00019A4E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GPUImageIIDCCameraExample;
+			productName = GPUImageIIDCCameraExample;
+			productReference = 79E62F1B1ABB211A00019A4E /* GPUImageIIDCCameraExample.app */;
+			productType = "com.apple.product-type.application";
+		};
+		79E62F2D1ABB211A00019A4E /* GPUImageIIDCCameraExampleTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 79E62F3B1ABB211A00019A4E /* Build configuration list for PBXNativeTarget "GPUImageIIDCCameraExampleTests" */;
+			buildPhases = (
+				79E62F2A1ABB211A00019A4E /* Sources */,
+				79E62F2B1ABB211A00019A4E /* Frameworks */,
+				79E62F2C1ABB211A00019A4E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				79E62F301ABB211A00019A4E /* PBXTargetDependency */,
+			);
+			name = GPUImageIIDCCameraExampleTests;
+			productName = GPUImageIIDCCameraExampleTests;
+			productReference = 79E62F2E1ABB211A00019A4E /* GPUImageIIDCCameraExampleTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		79E62F131ABB211A00019A4E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0630;
+				ORGANIZATIONNAME = "Red Queen Coder, LLC";
+				TargetAttributes = {
+					79E62F1A1ABB211A00019A4E = {
+						CreatedOnToolsVersion = 6.3;
+					};
+					79E62F2D1ABB211A00019A4E = {
+						CreatedOnToolsVersion = 6.3;
+						TestTargetID = 79E62F1A1ABB211A00019A4E;
+					};
+				};
+			};
+			buildConfigurationList = 79E62F161ABB211A00019A4E /* Build configuration list for PBXProject "GPUImageIIDCCameraExample" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 79E62F121ABB211A00019A4E;
+			productRefGroup = 79E62F1C1ABB211A00019A4E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				79E62F1A1ABB211A00019A4E /* GPUImageIIDCCameraExample */,
+				79E62F2D1ABB211A00019A4E /* GPUImageIIDCCameraExampleTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		79E62F191ABB211A00019A4E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				79E62F261ABB211A00019A4E /* Images.xcassets in Resources */,
+				79E62F291ABB211A00019A4E /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		79E62F2C1ABB211A00019A4E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		79E62F171ABB211A00019A4E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				79E62F241ABB211A00019A4E /* main.m in Sources */,
+				79E62F221ABB211A00019A4E /* AppDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		79E62F2A1ABB211A00019A4E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				79E62F351ABB211A00019A4E /* GPUImageIIDCCameraExampleTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		79E62F301ABB211A00019A4E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 79E62F1A1ABB211A00019A4E /* GPUImageIIDCCameraExample */;
+			targetProxy = 79E62F2F1ABB211A00019A4E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		79E62F271ABB211A00019A4E /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				79E62F281ABB211A00019A4E /* Base */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		79E62F361ABB211A00019A4E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		79E62F371ABB211A00019A4E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		79E62F391ABB211A00019A4E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = GPUImageIIDCCameraExample/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		79E62F3A1ABB211A00019A4E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = GPUImageIIDCCameraExample/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		79E62F3C1ABB211A00019A4E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = GPUImageIIDCCameraExampleTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GPUImageIIDCCameraExample.app/Contents/MacOS/GPUImageIIDCCameraExample";
+			};
+			name = Debug;
+		};
+		79E62F3D1ABB211A00019A4E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = GPUImageIIDCCameraExampleTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GPUImageIIDCCameraExample.app/Contents/MacOS/GPUImageIIDCCameraExample";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		79E62F161ABB211A00019A4E /* Build configuration list for PBXProject "GPUImageIIDCCameraExample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				79E62F361ABB211A00019A4E /* Debug */,
+				79E62F371ABB211A00019A4E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		79E62F381ABB211A00019A4E /* Build configuration list for PBXNativeTarget "GPUImageIIDCCameraExample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				79E62F391ABB211A00019A4E /* Debug */,
+				79E62F3A1ABB211A00019A4E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		79E62F3B1ABB211A00019A4E /* Build configuration list for PBXNativeTarget "GPUImageIIDCCameraExampleTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				79E62F3C1ABB211A00019A4E /* Debug */,
+				79E62F3D1ABB211A00019A4E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 79E62F131ABB211A00019A4E /* Project object */;
+}
