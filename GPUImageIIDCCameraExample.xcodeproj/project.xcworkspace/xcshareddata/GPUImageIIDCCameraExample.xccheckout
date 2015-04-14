@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>3F30CB60-3692-4E59-A329-D2DA67B56C22</string>
+	<key>IDESourceControlProjectName</key>
+	<string>GPUImageIIDCCameraExample</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>BC87028118924A65F0D9822BB669FCF6FD3E7661</key>
+		<string>github.com:SonoPlot/GPUImageIIDCCameraExample.git</string>
+		<key>E609DD15689CC93D8F4D219EB393F30F9F726178</key>
+		<string>https://github.com/BradLarson/GPUImage.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>GPUImageIIDCCameraExample.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>BC87028118924A65F0D9822BB669FCF6FD3E7661</key>
+		<string>../..</string>
+		<key>E609DD15689CC93D8F4D219EB393F30F9F726178</key>
+		<string>../../../../GPUImage</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>github.com:SonoPlot/GPUImageIIDCCameraExample.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>BC87028118924A65F0D9822BB669FCF6FD3E7661</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>E609DD15689CC93D8F4D219EB393F30F9F726178</string>
+			<key>IDESourceControlWCCName</key>
+			<string>GPUImage</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>BC87028118924A65F0D9822BB669FCF6FD3E7661</string>
+			<key>IDESourceControlWCCName</key>
+			<string>GPUImageIIDCCameraExample</string>
+		</dict>
+	</array>
+</dict>
+</plist>

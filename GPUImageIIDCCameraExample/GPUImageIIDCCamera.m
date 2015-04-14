@@ -300,7 +300,7 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     {
         if (frame->frames_behind > 5)
         {
-            // Why is this "if" statement here?? -JKC
+            // Why is this "if" statement here?? Nothing happens in this method!! -JKC
         }
         
         while (frame->frames_behind > 2)
