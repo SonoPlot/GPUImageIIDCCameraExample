@@ -1,13 +1,19 @@
-//
-//  GPUImageIIDCCameraWindowController.h
-//  GPUImageIIDCCameraExample
-//
-//  Created by Janie Clayton-Hasz on 3/19/15.
-//  Copyright (c) 2015 Red Queen Coder, LLC. All rights reserved.
-//
-
 #import <Cocoa/Cocoa.h>
+#import <GPUImage/GPUImage.h>
+#import "GPUImageIIDCCamera.h"
+
+typedef enum  { UNIBRAIN, FLEA2G, BLACKFLY} SPCameraType;
 
 @interface GPUImageIIDCCameraWindowController : NSWindowController
+{
+    GPUImageAVCamera *videoCamera;
+    GPUImageOutput<GPUImageInput> *filter;
+    GPUImageMovieWriter *movieWriter;
+    
+    GPUImageIIDCCamera *iidcCamera;
+}
+
+@property (weak) IBOutlet GPUImageView *videoView;
+@property(readonly) SPCameraType cameraType;
 
 @end

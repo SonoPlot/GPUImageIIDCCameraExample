@@ -1,12 +1,5 @@
-//
-//  AppDelegate.m
-//  GPUImageIIDCCameraExample
-//
-//  Created by Janie Clayton-Hasz on 3/19/15.
-//  Copyright (c) 2015 Red Queen Coder, LLC. All rights reserved.
-//
-
 #import "AppDelegate.h"
+#import <GPUImage/GPUImage.h>
 
 @interface AppDelegate ()
 
@@ -17,6 +10,8 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     // Insert code here to initialize your application
+    iidcCameraWindowController = [[GPUImageIIDCCameraWindowController alloc] initWithWindowNibName:@"GPUImageIIDCCameraWindowController"];
+    [iidcCameraWindowController showWindow:self];
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
