@@ -61,14 +61,14 @@ extern NSString *const GPUImageCameraErrorDomain;
 
 // Need to figure out how to consolidate/reconcile this stuff with the Camera Setting Types. -JKC
 @property(readwrite, nonatomic) NSInteger brightnessMin, brightnessMax, exposureMin, exposureMax, sharpnessMin, sharpnessMax, whiteBalanceMin, whiteBalanceMax, saturationMin, saturationMax, gammaMin, gammaMax, shutterMin, shutterMax, gainMin, gainMax;
-@property(readwrite, nonatomic) NSInteger brightness, exposure, sharpness, whiteBalanceU, whiteBalanceV, saturation, gamma, shutter, gain;
+@property(readwrite, nonatomic) NSInteger brightness, exposure, whiteBalanceU, whiteBalanceV, sharpness, saturation, gamma, shutter, gain;
 
 
 // Camera interface
 - (BOOL)connectToCamera:(NSError **)error;
 - (BOOL)readAllSettingLimits:(NSError **)error;
 - (void)startCameraCapture:(NSError **)error;
-- (BOOL)grabNewVideoFrame:(NSError **)error;
+//- (BOOL)grabNewVideoFrame:(NSError **)error;
 
 // Error handling methods
 - (NSError *)errorForCameraDisconnection;

@@ -22,7 +22,7 @@
 		<key>BC87028118924A65F0D9822BB669FCF6FD3E7661</key>
 		<string>../..</string>
 		<key>E609DD15689CC93D8F4D219EB393F30F9F726178</key>
-		<string>../../../../GPUImage</string>
+		<string>../../../GPUImage</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>github.com:SonoPlot/GPUImageIIDCCameraExample.git</string>

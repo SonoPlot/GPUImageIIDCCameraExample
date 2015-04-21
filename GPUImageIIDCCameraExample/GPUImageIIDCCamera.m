@@ -91,11 +91,8 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     frameIntervalCounter = 0;
     
     // Handle camera disconnection
-    // TODO: Make this inline using GCD, rather than requiring a callback -BJL
-    // We want to avoid using notifications, so need to replace this with something else. -JKC
-    // Replace with a block
-    // Deal with this after dealing with just connecting to a camera. -JKC
-//    cameraDisconnectionObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kSPCameraDisconnectedNotification object:nil queue:nil usingBlock:^(NSNotification *note) {
+    // Need to figure out where this block is called. -JKC
+//    void(^cameraDisconnection)(void) = ^(void){
 //        NSError *error = [self errorForCameraDisconnection];
 //        runOnMainQueueWithoutDeadlocking(^{
 //            // TODO: Use a camera-window-modal sheet instead of this document-modal error
@@ -103,13 +100,7 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 //        });
 //        
 //        [self disconnectFromIIDCCamera];
-//        
-//        SPCameraConnectionOperation *cameraConnectionOperation = [[SPCameraConnectionOperation alloc] initWithCameraController:self];
-//        [firewireCommunicationQueue addOperation:cameraConnectionOperation];
-//    }];
-//    
-//    SPCameraConnectionOperation *cameraConnectionOperation = [[SPCameraConnectionOperation alloc] initWithCameraController:self];
-//    [firewireCommunicationQueue addOperation:cameraConnectionOperation];
+//    };
     
     return self;
 }
@@ -235,6 +226,35 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 //        [[NSNotificationCenter defaultCenter] postNotificationName:kSPCameraConnectedNotification object:nil];
 }
 
+- (BOOL)disconnectFromIIDCCamera;
+{
+    //    if (_isRecordingInProgress)
+    //    {
+    //        //		[self stopRecordingVideo];
+    //    }
+    
+    //    [firewireCommunicationQueue cancelAllOperations];
+    
+    if (_isConnectedToCamera)
+    {
+        //        [firewireCommunicationQueue waitUntilAllOperationsAreFinished];
+        self.isConnectedToCamera = NO;
+        
+        // There was conditional logic needed for turning off the LED for the USB 3.0 Blackfly
+        
+        dc1394_video_set_transmission(_camera, DC1394_OFF);
+        dc1394_capture_stop(_camera);
+        dc1394_camera_set_power(_camera,DC1394_OFF);
+        dc1394_camera_free (_camera);
+        _camera = NULL;
+        dc1394_free (d);
+        d = NULL;
+    }
+    return YES;
+}
+
+#pragma mark -
+#pragma mark Settings
 - (BOOL)readAllSettingLimits:(NSError **)error;
 {
     if(dc1394_feature_get_all(_camera, &features) != DC1394_SUCCESS)
@@ -280,8 +300,126 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     return YES;
 }
 
+
+// Access and override the getters for the camera properties. -JKC
+- (void)setBrightness:(NSInteger)brightness
+{
+     dc1394_feature_set_value(_camera, DC1394_FEATURE_BRIGHTNESS, (uint32_t)self.brightness);
+}
+
+- (void)setExposure:(NSInteger)exposure
+{
+    dc1394_feature_set_value(_camera, DC1394_FEATURE_EXPOSURE, (uint32_t)self.exposure);
+}
+
+- (void)setShutter:(NSInteger)shutter
+{
+    dc1394_feature_set_value(_camera, DC1394_FEATURE_SHUTTER, (uint32_t)self.shutter);
+}
+
+- (void)setSharpness:(NSInteger)sharpness
+{
+    dc1394_feature_set_value(_camera, DC1394_FEATURE_SHARPNESS, (uint32_t)self.sharpness);
+}
+
+// Do as one method. No properties for both U and V.
+// Method that sets both
+// Two methods that return the U and the V separately
+
+- (void)setWhiteBalance
+{
+    dc1394_feature_whitebalance_set_value(_camera, (uint32_t)self.whiteBalanceU, (uint32_t)self.whiteBalanceV);
+}
+
+- (void)setSaturation:(NSInteger)saturation
+{
+    dc1394_feature_set_value(_camera, DC1394_FEATURE_SATURATION, (uint32_t)self.saturation);
+}
+
+- (void)setGamma:(NSInteger)gamma
+{
+    dc1394_feature_set_value(_camera, DC1394_FEATURE_GAMMA, (uint32_t)self.gamma);
+}
+
+- (void)setGain:(NSInteger)gain
+{
+    dc1394_feature_set_value(_camera, DC1394_FEATURE_GAIN, (uint32_t)self.gain);
+}
+
+// Access and override the setters for the camera properties. -JKC
+// This is being fetched from the camera. -JKC
+- (NSInteger)brightness
+{
+    // This might be able to be done in fewer lines of code? Maybe?? -JKC
+    // Can I call these instance variables the same thing as the getter method?? -JKC
+    uint32_t brightness;
+    dc1394_feature_get_value(_camera, DC1394_FEATURE_BRIGHTNESS, &brightness);
+    return brightness;
+}
+
+- (NSInteger)exposure
+{
+    uint32_t exposure;
+    dc1394_feature_get_value(_camera, DC1394_FEATURE_EXPOSURE, &exposure);
+    return exposure;
+}
+
+- (NSInteger)sharpness
+{
+    uint32_t sharpness;
+    dc1394_feature_get_value(_camera, DC1394_FEATURE_SHARPNESS, &sharpness);
+    return sharpness;
+}
+
+// This must be done differently -JKC
+- (NSInteger)whiteBalanceU
+{
+    uint32_t whiteBalanceU;
+    uint32_t whiteBalanceV;
+    dc1394_feature_whitebalance_get_value(_camera, &whiteBalanceU, &whiteBalanceV);
+    return whiteBalanceU;
+}
+
+- (NSInteger)whiteBalanceV
+{
+    uint32_t whiteBalanceU;
+    uint32_t whiteBalanceV;
+    dc1394_feature_whitebalance_get_value(_camera, &whiteBalanceU, &whiteBalanceV);
+    return whiteBalanceV;
+}
+
+- (NSInteger)saturation
+{
+    uint32_t saturation;
+    dc1394_feature_get_value(_camera, DC1394_FEATURE_SATURATION, &saturation);
+    return saturation;
+}
+
+- (NSInteger)gamma
+{
+    uint32_t ivarGamma;
+    dc1394_feature_get_value(_camera, DC1394_FEATURE_GAMMA, &ivarGamma);
+    return ivarGamma;
+}
+
+- (NSInteger)shutter
+{
+    uint32_t shutter;
+    dc1394_feature_get_value(_camera, DC1394_FEATURE_SHUTTER, &shutter);
+    return shutter;
+}
+
+- (NSInteger)gain
+{
+    uint32_t gain;
+    dc1394_feature_get_value(_camera, DC1394_FEATURE_GAIN, &gain);
+    return gain;
+}
+
+/*
 #pragma mark -
 #pragma mark Frame grabbing
+// Where does this get called?? In the original code, it's part of the OpenGL pipeline. -JKC
 - (BOOL)grabNewVideoFrame:(NSError **)error;
 {
     int err = 0;
@@ -292,17 +430,14 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     if (err != DC1394_SUCCESS)
     {
         // Serious error with the camera that needs to be presented
+        // Need to figure out how to detangle this from a notification. -JKC
+        // Want to know how to handle this!! I assume it's rather important. -JKC
 //        [[NSNotificationCenter defaultCenter] postNotificationName:kSPCameraDisconnectedNotification object:nil];
 //        return NO;
     }
     
     if (frame != NULL)
     {
-        if (frame->frames_behind > 5)
-        {
-            // Why is this "if" statement here?? Nothing happens in this method!! -JKC
-        }
-        
         while (frame->frames_behind > 2)
         {
             dc1394_capture_enqueue(_camera, frame);
@@ -321,23 +456,14 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
             return NO;
         }
         
-//        if (_videoTexturePointer != NULL)
-//        {
-//            if ((_cameraType == FLEA2G) || (_cameraType == BLACKFLY))
-//            {
-//                //				yuv422_2vuy422_old(frame->image, videoTexturePointer, (NSUInteger)frameSize.width, (NSUInteger)frameSize.height, &currentLuminance);
-//                yuv422_2vuy422(frame->image, _videoTexturePointer, (NSUInteger)_frameSize.width, (NSUInteger)_frameSize.height, &currentLuminance);
-//            }
-//            else
-//            {
-//                uyvy411_2vuy422(frame->image, _videoTexturePointer, (NSUInteger)_frameSize.width, (NSUInteger)_frameSize.height, &currentLuminance);
-//            }
-//        }
+        // We were doing conditional logic for the YUV remapping. -JKC
         dc1394_capture_enqueue(_camera, frame);
         
         sequentialMissedCameraFrames = 0;
         frameGrabTimedOutOnce = NO;
         
+        // How much of this are we still responsible for?? -JKC
+        // This seems slightly less pertinent than just grabbing frames?? -JKC
 //        if (_automaticLightingCorrectionEnabled)
 //        {
 //            [self adjustLightSensitivity];
@@ -355,7 +481,7 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 //            previousExposure =  _exposure * FILTERFACTORFORSMOOTHINGCAMERAVALUES + (1.0 - FILTERFACTORFORSMOOTHINGCAMERAVALUES) * previousExposure;
 //            //			previousGain = gain;
 //        }
-        
+//        
 //        [self encodeVideoFrameToDiskIfNeeded];
     
         return YES;
@@ -383,6 +509,28 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     
     return NO;
 }
+
+
+
+// I don't know about this?? There are two declarations of this in the orginal code and it's called by the video view??
+// It's the only place in the code that grabNewVideoFrame is called. -JKC
+- (BOOL)isNewCameraFrameAvailable;
+{
+    if (!_isConnectedToCamera)
+    {
+        return NO;
+    }
+    
+    NSError *error = nil;
+    BOOL success = [self grabNewVideoFrame:&error];
+    	if (!success)
+    	{
+    		NSLog(@"No frame available");
+    	}
+    
+    return success;
+}
+*/
 
 #pragma mark -
 #pragma mark Error handling methods
