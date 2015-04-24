@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		794F09211AE95D3300CB3872 /* GPUImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 794F09201AE95D1200CB3872 /* GPUImage.framework */; };
-		794F09241AE95DB100CB3872 /* GPUImage.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 794F09201AE95D1200CB3872 /* GPUImage.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		79D8003D1ACC3E0200D79622 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 79D8003C1ACC3E0200D79622 /* Accelerate.framework */; };
 		79D80A811AD817600016D0BB /* libdc1394.22.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 79E62F871ABC9B2C00019A4E /* libdc1394.22.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		79D80A821AD817600016D0BB /* libusb-1.0.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 79E62F881ABC9B2C00019A4E /* libusb-1.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -24,18 +22,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		794F091F1AE95D1200CB3872 /* PBXContainerItemProxy */ = {
+		79EF90E11AEAD020007F2755 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 794F091B1AE95D1200CB3872 /* GPUImageMac.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = BCA3F31C17239B6500E28AEC;
-			remoteInfo = GPUImage;
-		};
-		794F09221AE95D7200CB3872 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 794F091B1AE95D1200CB3872 /* GPUImageMac.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = BCA3F31B17239B6500E28AEC;
 			remoteInfo = GPUImage;
 		};
 /* End PBXContainerItemProxy section */
@@ -47,7 +38,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				794F09241AE95DB100CB3872 /* GPUImage.framework in CopyFiles */,
 				79D80A811AD817600016D0BB /* libdc1394.22.dylib in CopyFiles */,
 				79D80A821AD817600016D0BB /* libusb-1.0.0.dylib in CopyFiles */,
 			);
@@ -56,7 +46,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		794F091B1AE95D1200CB3872 /* GPUImageMac.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GPUImageMac.xcodeproj; path = ../../../GPUImage/framework/GPUImageMac.xcodeproj; sourceTree = "<group>"; };
+		794F091B1AE95D1200CB3872 /* GPUImageMac.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GPUImageMac.xcodeproj; path = ../../GPUImage/framework/GPUImageMac.xcodeproj; sourceTree = "<group>"; };
 		79D8003C1ACC3E0200D79622 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		79E62F1B1ABB211A00019A4E /* GPUImageIIDCCameraExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GPUImageIIDCCameraExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		79E62F1F1ABB211A00019A4E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -79,7 +69,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				794F09211AE95D3300CB3872 /* GPUImage.framework in Frameworks */,
 				79D8003D1ACC3E0200D79622 /* Accelerate.framework in Frameworks */,
 				79E62F8A1ABC9B2C00019A4E /* libusb-1.0.0.dylib in Frameworks */,
 				79E62F891ABC9B2C00019A4E /* libdc1394.22.dylib in Frameworks */,
@@ -89,14 +78,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		794F091C1AE95D1200CB3872 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				794F09201AE95D1200CB3872 /* GPUImage.framework */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		79E62F121ABB211A00019A4E = {
 			isa = PBXGroup;
 			children = (
@@ -151,6 +132,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		79EF90DE1AEAD020007F2755 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				79EF90E21AEAD020007F2755 /* GPUImage.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -166,7 +155,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				794F09231AE95D7200CB3872 /* PBXTargetDependency */,
 			);
 			name = GPUImageIIDCCameraExample;
 			productName = GPUImageIIDCCameraExample;
@@ -200,7 +188,7 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 794F091C1AE95D1200CB3872 /* Products */;
+					ProductGroup = 79EF90DE1AEAD020007F2755 /* Products */;
 					ProjectRef = 794F091B1AE95D1200CB3872 /* GPUImageMac.xcodeproj */;
 				},
 			);
@@ -212,11 +200,11 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		794F09201AE95D1200CB3872 /* GPUImage.framework */ = {
+		79EF90E21AEAD020007F2755 /* GPUImage.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
 			path = GPUImage.framework;
-			remoteRef = 794F091F1AE95D1200CB3872 /* PBXContainerItemProxy */;
+			remoteRef = 79EF90E11AEAD020007F2755 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -247,14 +235,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		794F09231AE95D7200CB3872 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = GPUImage;
-			targetProxy = 794F09221AE95D7200CB3872 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		79E62F271ABB211A00019A4E /* MainMenu.xib */ = {

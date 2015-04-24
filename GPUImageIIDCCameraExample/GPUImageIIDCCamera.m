@@ -258,7 +258,11 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 
 #pragma mark -
 #pragma mark Settings
-// Do we read this in a synchronized queue? -JKC
+
+// Do the camera setup for things like frame rate and size
+// Deal with large enum of video formats
+// Deal with the possibility of Format 7
+
 - (BOOL)readAllSettingLimits:(NSError **)error;
 {
     if(dc1394_feature_get_all(_camera, &features) != DC1394_SUCCESS)
