@@ -14,14 +14,16 @@
 //    [self runGPUImageCameraCode];
     [self setupCameraCode];
     
+    NSError *error;
+    [iidcCamera readAllSettingLimits:&error];
+    [self cameraSettingsTests];
 }
 
 #pragma MARK - GPUImageIIDCCamera Code
 - (void)setupCameraCode {
     
     iidcCamera = [[GPUImageIIDCCamera alloc] init];
-    
-    
+
     NSError *error = nil;
     [iidcCamera connectToCamera:&error];
     
@@ -48,6 +50,42 @@
     }
     
     NSLog(@"The camera was found: %hhd", cameraFound);
+}
+
+- (void)cameraSettingsTests {
+    
+    NSInteger brightness = iidcCamera.brightness;
+    NSInteger saturation = iidcCamera.saturation;
+    NSInteger whiteBalanceU = iidcCamera.whiteBalanceU;
+    NSInteger whiteBalanceV = iidcCamera.whiteBalanceV;
+    
+    // Output the current settings on the camera
+    NSLog(@"Current Brightness Setting: %ld", iidcCamera.brightness);
+    NSLog(@"Current Saturation Setting: %ld", iidcCamera.saturation);
+    NSLog(@"Current White Balance U Setting: %ld", iidcCamera.whiteBalanceU);
+    NSLog(@"Current White Balance V Setting: %ld", iidcCamera.whiteBalanceV);
+    
+    // Reset all the things!
+    [iidcCamera setBrightness:20];
+    [iidcCamera setSaturation:420];
+    [iidcCamera setWhiteBalance:550 whiteBalanceV:810];
+    
+    // Output the new current settings on the camera
+    NSLog(@"Changed Brightness Setting: %ld", iidcCamera.brightness);
+    NSLog(@"Changed Saturation Setting: %ld", iidcCamera.saturation);
+    NSLog(@"Changed White Balance U Setting: %ld", iidcCamera.whiteBalanceU);
+    NSLog(@"Changed White Balance V Setting: %ld", iidcCamera.whiteBalanceV);
+    
+    // Reset all the things!
+    [iidcCamera setBrightness:brightness];
+    [iidcCamera setSaturation:saturation];
+    [iidcCamera setWhiteBalance:(uint32_t)whiteBalanceU whiteBalanceV:(uint32_t)whiteBalanceV];
+    
+    // Output the new current settings on the camera
+    NSLog(@"Original Brightness Setting: %ld", iidcCamera.brightness);
+    NSLog(@"Original Saturation Setting: %ld", iidcCamera.saturation);
+    NSLog(@"Original White Balance U Setting: %ld", iidcCamera.whiteBalanceU);
+    NSLog(@"Original White Balance V Setting: %ld", iidcCamera.whiteBalanceV);
 }
 
 #pragma MARK - GPUImage Code for Debugging Purposes

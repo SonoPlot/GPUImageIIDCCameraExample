@@ -77,6 +77,8 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     if (!(self = [super init]))
         return nil;
     
+    cameraDispatchQueue = dispatch_queue_create("CameraDispatchQueue", NULL);
+    
     // Assuming these are the initial values. Need to figure out how to coordinate these with the camera-specific values. -JKC
     _isCaptureInProgress= YES;
     _isConnectedToCamera = NO;
@@ -92,6 +94,7 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     
     // Handle camera disconnection
     // Need to figure out where this block is called. -JKC
+    // Should this be int he initializer or should it be its own method?? What is going on here? -JKC
 //    void(^cameraDisconnection)(void) = ^(void){
 //        NSError *error = [self errorForCameraDisconnection];
 //        runOnMainQueueWithoutDeadlocking(^{
@@ -255,6 +258,7 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 
 #pragma mark -
 #pragma mark Settings
+// Do we read this in a synchronized queue? -JKC
 - (BOOL)readAllSettingLimits:(NSError **)error;
 {
     if(dc1394_feature_get_all(_camera, &features) != DC1394_SUCCESS)
@@ -295,6 +299,24 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
         self.saturationMax = newSaturationMax;
         self.gammaMin = newGammaMin;
         self.gammaMax = newGammaMax;
+        
+        /*
+        NSLog(@"newGainMin: %u", newGainMin);
+        NSLog(@"newGainMax: %u", newGainMax);
+        NSLog(@"newBrightnessMin: %u", newBrightnessMin);
+        NSLog(@"newBrightnessMax: %u", newBrightnessMax);
+        NSLog(@"newExposureMin: %u", newExposureMin);
+        NSLog(@"newExposureMax: %u", newExposureMax);
+        
+        NSLog(@"newSharpnessMin: %u", newSharpnessMin);
+        NSLog(@"newSharpnessMax: %u", newSharpnessMax);
+        NSLog(@"newWhiteBalanceMin: %u", newWhiteBalanceMin);
+        NSLog(@"newWhiteBalanceMax: %u", newWhiteBalanceMax);
+        NSLog(@"newSaturationMin: %u", newSaturationMin);
+        NSLog(@"newSaturationMax: %u", newSaturationMax);
+        NSLog(@"newGammaMin: %u", newGammaMin);
+        NSLog(@"newGammaMax: %u", newGammaMax);
+        */
     }	
     
     return YES;
@@ -302,124 +324,178 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 
 
 // Access and override the getters for the camera properties. -JKC
-- (void)setBrightness:(NSInteger)brightness
-{
-     dc1394_feature_set_value(_camera, DC1394_FEATURE_BRIGHTNESS, (uint32_t)self.brightness);
-}
-
-- (void)setExposure:(NSInteger)exposure
-{
-    dc1394_feature_set_value(_camera, DC1394_FEATURE_EXPOSURE, (uint32_t)self.exposure);
-}
-
-- (void)setShutter:(NSInteger)shutter
-{
-    dc1394_feature_set_value(_camera, DC1394_FEATURE_SHUTTER, (uint32_t)self.shutter);
-}
-
-- (void)setSharpness:(NSInteger)sharpness
-{
-    dc1394_feature_set_value(_camera, DC1394_FEATURE_SHARPNESS, (uint32_t)self.sharpness);
-}
-
-// Do as one method. No properties for both U and V.
-// Method that sets both
-// Two methods that return the U and the V separately
-
-- (void)setWhiteBalance
-{
-    dc1394_feature_whitebalance_set_value(_camera, (uint32_t)self.whiteBalanceU, (uint32_t)self.whiteBalanceV);
-}
-
-- (void)setSaturation:(NSInteger)saturation
-{
-    dc1394_feature_set_value(_camera, DC1394_FEATURE_SATURATION, (uint32_t)self.saturation);
-}
-
-- (void)setGamma:(NSInteger)gamma
-{
-    dc1394_feature_set_value(_camera, DC1394_FEATURE_GAMMA, (uint32_t)self.gamma);
-}
-
-- (void)setGain:(NSInteger)gain
-{
-    dc1394_feature_set_value(_camera, DC1394_FEATURE_GAIN, (uint32_t)self.gain);
-}
-
 // Access and override the setters for the camera properties. -JKC
-// This is being fetched from the camera. -JKC
+- (void)setBrightness:(NSInteger)newValue
+{
+    dispatch_async(cameraDispatchQueue, ^{
+        dc1394_feature_set_value(_camera, DC1394_FEATURE_BRIGHTNESS, (uint32_t)newValue);
+    });
+}
+
 - (NSInteger)brightness
 {
-    // This might be able to be done in fewer lines of code? Maybe?? -JKC
-    // Can I call these instance variables the same thing as the getter method?? -JKC
-    uint32_t brightness;
-    dc1394_feature_get_value(_camera, DC1394_FEATURE_BRIGHTNESS, &brightness);
-    return brightness;
+    __block uint32_t currentValue;
+    
+    dispatch_sync(cameraDispatchQueue, ^{
+        dc1394_feature_get_value(_camera, DC1394_FEATURE_BRIGHTNESS, &currentValue);
+    });
+    
+    return currentValue;
+}
+
+
+- (void)setExposure:(NSInteger)newValue
+{
+    dispatch_async(cameraDispatchQueue, ^{
+        dc1394_feature_set_value(_camera, DC1394_FEATURE_EXPOSURE, (uint32_t)newValue);
+    });
 }
 
 - (NSInteger)exposure
 {
-    uint32_t exposure;
-    dc1394_feature_get_value(_camera, DC1394_FEATURE_EXPOSURE, &exposure);
-    return exposure;
+    __block uint32_t currentValue;
+    
+    dispatch_sync(cameraDispatchQueue, ^{
+        dc1394_feature_get_value(_camera, DC1394_FEATURE_EXPOSURE, &currentValue);
+    });
+    
+    return currentValue;
+}
+
+
+- (void)setShutter:(NSInteger)newValue
+{
+    dispatch_async(cameraDispatchQueue, ^{
+        dc1394_feature_set_value(_camera, DC1394_FEATURE_SHUTTER, (uint32_t)newValue);
+    });
+}
+
+- (NSInteger)shutter
+{
+    __block uint32_t currentValue;
+    
+    dispatch_sync(cameraDispatchQueue, ^{
+        dc1394_feature_get_value(_camera, DC1394_FEATURE_SHUTTER, &currentValue);
+    });
+    
+    return currentValue;
+}
+
+
+- (void)setSharpness:(NSInteger)newValue
+{
+    dispatch_async(cameraDispatchQueue, ^{
+        dc1394_feature_set_value(_camera, DC1394_FEATURE_SHARPNESS, (uint32_t)newValue);
+    });
 }
 
 - (NSInteger)sharpness
 {
-    uint32_t sharpness;
-    dc1394_feature_get_value(_camera, DC1394_FEATURE_SHARPNESS, &sharpness);
-    return sharpness;
+    __block uint32_t currentValue;
+    
+    dispatch_sync(cameraDispatchQueue, ^{
+        dc1394_feature_get_value(_camera, DC1394_FEATURE_SHARPNESS, &currentValue);
+    });
+    
+    return currentValue;
+}
+
+
+- (void)setSaturation:(NSInteger)newValue
+{
+    dispatch_async(cameraDispatchQueue, ^{
+        dc1394_feature_set_value(_camera, DC1394_FEATURE_SATURATION, (uint32_t)newValue);
+    });
+}
+
+- (NSInteger)saturation
+{
+    __block uint32_t currentValue;
+    
+    dispatch_sync(cameraDispatchQueue, ^{
+        dc1394_feature_get_value(_camera, DC1394_FEATURE_SATURATION, &currentValue);
+    });
+    
+    return currentValue;
+}
+
+
+- (void)setGamma:(NSInteger)newValue
+{
+    dispatch_async(cameraDispatchQueue, ^{
+        dc1394_feature_set_value(_camera, DC1394_FEATURE_GAMMA, (uint32_t)newValue);
+    });
+}
+
+- (NSInteger)gamma
+{
+    __block uint32_t currentValue;
+    
+    dispatch_sync(cameraDispatchQueue, ^{
+        dc1394_feature_get_value(_camera, DC1394_FEATURE_GAMMA, &currentValue);
+    });
+    
+    return currentValue;
+}
+
+
+
+- (void)setGain:(NSInteger)newValue
+{
+    dispatch_async(cameraDispatchQueue, ^{
+        dc1394_feature_set_value(_camera, DC1394_FEATURE_GAIN, (uint32_t)newValue);
+    });
+}
+
+- (NSInteger)gain
+{
+    __block uint32_t currentValue;
+    
+    dispatch_sync(cameraDispatchQueue, ^{
+        dc1394_feature_get_value(_camera, DC1394_FEATURE_GAIN, &currentValue);
+    });
+    
+    return currentValue;
 }
 
 // This must be done differently -JKC
+- (void)setWhiteBalance:(uint32_t)newWhiteBalanceU whiteBalanceV:(uint32_t)newWhiteBalanceV
+{
+    dispatch_async(cameraDispatchQueue, ^{
+        dc1394_feature_whitebalance_set_value(_camera, newWhiteBalanceU, newWhiteBalanceV);
+    });
+}
+
 - (NSInteger)whiteBalanceU
 {
-    uint32_t whiteBalanceU;
-    uint32_t whiteBalanceV;
-    dc1394_feature_whitebalance_get_value(_camera, &whiteBalanceU, &whiteBalanceV);
+    __block uint32_t whiteBalanceU;
+    __block uint32_t whiteBalanceV;
+    
+    dispatch_sync(cameraDispatchQueue, ^{
+        dc1394_feature_whitebalance_get_value(_camera, &whiteBalanceU, &whiteBalanceV);
+    });
+    
     return whiteBalanceU;
 }
 
 - (NSInteger)whiteBalanceV
 {
-    uint32_t whiteBalanceU;
-    uint32_t whiteBalanceV;
-    dc1394_feature_whitebalance_get_value(_camera, &whiteBalanceU, &whiteBalanceV);
+    __block uint32_t whiteBalanceU;
+    __block uint32_t whiteBalanceV;
+    
+    dispatch_sync(cameraDispatchQueue, ^{
+        dc1394_feature_whitebalance_get_value(_camera, &whiteBalanceU, &whiteBalanceV);
+    });
+    
     return whiteBalanceV;
 }
 
-- (NSInteger)saturation
-{
-    uint32_t saturation;
-    dc1394_feature_get_value(_camera, DC1394_FEATURE_SATURATION, &saturation);
-    return saturation;
-}
-
-- (NSInteger)gamma
-{
-    uint32_t ivarGamma;
-    dc1394_feature_get_value(_camera, DC1394_FEATURE_GAMMA, &ivarGamma);
-    return ivarGamma;
-}
-
-- (NSInteger)shutter
-{
-    uint32_t shutter;
-    dc1394_feature_get_value(_camera, DC1394_FEATURE_SHUTTER, &shutter);
-    return shutter;
-}
-
-- (NSInteger)gain
-{
-    uint32_t gain;
-    dc1394_feature_get_value(_camera, DC1394_FEATURE_GAIN, &gain);
-    return gain;
-}
 
 /*
 #pragma mark -
 #pragma mark Frame grabbing
 // Where does this get called?? In the original code, it's part of the OpenGL pipeline. -JKC
+// This is where you would update settings inside the asychronous dispatch queue, except I have it on the controller class... D'oh! -JKC
 - (BOOL)grabNewVideoFrame:(NSError **)error;
 {
     int err = 0;

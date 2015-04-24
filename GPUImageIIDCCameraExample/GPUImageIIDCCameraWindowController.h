@@ -11,6 +11,8 @@ typedef enum  { UNIBRAIN, FLEA2G, BLACKFLY} SPCameraType;
     GPUImageMovieWriter *movieWriter;
     
     GPUImageIIDCCamera *iidcCamera;
+    
+    
 }
 
 @property (weak) IBOutlet GPUImageView *videoView;

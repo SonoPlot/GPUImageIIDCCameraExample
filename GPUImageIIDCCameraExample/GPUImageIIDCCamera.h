@@ -41,6 +41,9 @@ extern NSString *const GPUImageCameraErrorDomain;
     char *device_name;
     dc1394_t * d;
     dc1394featureset_t features;
+    
+    // Dispatch Queue
+    dispatch_queue_t cameraDispatchQueue;
 }
 
 @property(readwrite) BOOL isCaptureInProgress;
@@ -59,10 +62,11 @@ extern NSString *const GPUImageCameraErrorDomain;
 @property(readwrite) dc1394operation_mode_t operationMode;
 
 
-// Need to figure out how to consolidate/reconcile this stuff with the Camera Setting Types. -JKC
+// Settings
 @property(readwrite, nonatomic) NSInteger brightnessMin, brightnessMax, exposureMin, exposureMax, sharpnessMin, sharpnessMax, whiteBalanceMin, whiteBalanceMax, saturationMin, saturationMax, gammaMin, gammaMax, shutterMin, shutterMax, gainMin, gainMax;
 @property(readwrite, nonatomic) NSInteger brightness, exposure, whiteBalanceU, whiteBalanceV, sharpness, saturation, gamma, shutter, gain;
 
+- (void)setWhiteBalance:(uint32_t)newWhiteBalanceU whiteBalanceV:(uint32_t)newWhiteBalanceV;
 
 // Camera interface
 - (BOOL)connectToCamera:(NSError **)error;
