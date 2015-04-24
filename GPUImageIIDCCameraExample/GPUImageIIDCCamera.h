@@ -22,6 +22,7 @@ void uyvy411_2vuy422(const unsigned char *the411Frame, unsigned char *the422Fram
 void yuv422_2vuy422(const unsigned char *theYUVFrame, unsigned char *the422Frame, const unsigned int width, const unsigned int height, float *passbackLuminance);
 
 extern NSString *const GPUImageCameraErrorDomain;
+static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data);
 
 // Does this class subclass NSObject because it needs to be separate from GPUImage for licensing reasons?? -JKC
 @interface GPUImageIIDCCamera : GPUImageOutput
@@ -44,6 +45,7 @@ extern NSString *const GPUImageCameraErrorDomain;
     
     // Dispatch Queue
     dispatch_queue_t cameraDispatchQueue;
+    NSRunLoop *cameraFrameCallbackRunLoop;
 }
 
 @property(readwrite) BOOL isCaptureInProgress;
@@ -71,7 +73,8 @@ extern NSString *const GPUImageCameraErrorDomain;
 // Camera interface
 - (BOOL)connectToCamera:(NSError **)error;
 - (BOOL)readAllSettingLimits:(NSError **)error;
-- (void)startCameraCapture:(NSError **)error;
+- (void)startCameraCapture;
+- (void)stopCameraCapture;
 //- (BOOL)grabNewVideoFrame:(NSError **)error;
 
 // Error handling methods

@@ -108,6 +108,13 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     return self;
 }
 
+- (void)dealloc;
+{
+    // Shut down run loop, if necessary
+    
+    [super dealloc];
+}
+
 #pragma mark -
 #pragma mark Camera interface
 - (BOOL)connectToCamera:(NSError **)error;
@@ -178,55 +185,79 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
         return NO;
     }
     
-        
     if (![self readAllSettingLimits:error])
     {
         return NO;	
     }
     
-    
-    if (dc1394_capture_setup(_camera, NUM_BUFFERS, DC1394_CAPTURE_FLAGS_DEFAULT) != DC1394_SUCCESS)
-    {
-        NSLog(@"Error in capture setup");
-        
-        if (error != NULL)
-        {
-            *error = [self errorForCameraDisconnection];
-        }
-        return NO;
-    }
-    
-    [self startCameraCapture:error];
-    
-
     dc1394_video_get_supported_modes(_camera, &_supportedVideoModes);
+    self.isConnectedToCamera = YES;
 
-    
     return YES;
 }
 
-// this does different functionality in the GPUImageAVCamera class. -JKC
-- (void)startCameraCapture:(NSError **)error;
+- (void)startCameraCapture;
 {
+    frameGrabTimedOutOnce = NO;
+    sequentialMissedCameraFrames = 0;
+
+    if (cameraFrameCallbackRunLoop == nil)
+    {
+        [self performSelectorInBackground:@selector(threadForActivationOfCamera) withObject:nil];
+    }
+    else
+    {
+        if (dc1394_video_set_transmission(_camera,DC1394_ON) != DC1394_SUCCESS)
+        {
+            NSLog(@"Error in setting transmission on");
+        }
+    }
+}
+
+- (void)stopCameraCapture;
+{
+    if (dc1394_video_set_transmission(_camera,DC1394_OFF) != DC1394_SUCCESS)
+    {
+        NSLog(@"Error in setting transmission on");
+    }
+//    dc1394_capture_stop(camera);
+}
+
+- (void)threadForActivationOfCamera;
+{
+    dc1394_capture_set_callback(camera, cameraFrameReadyCallback, (__bridge void *)(self));
+    
+    if (dc1394_capture_setup(camera, NUM_BUFFERS, DC1394_CAPTURE_FLAGS_DEFAULT) != DC1394_SUCCESS)
+    {
+        NSLog(@"Error in capture setup");
+    }
+    
     /*have the camera start sending us data*/
     
     frameGrabTimedOutOnce = NO;
     sequentialMissedCameraFrames = 0;
     
-    if (dc1394_video_set_transmission(_camera,DC1394_ON) != DC1394_SUCCESS)
+    if (dc1394_video_set_transmission(camera,DC1394_ON) != DC1394_SUCCESS)
     {
         NSLog(@"Error in setting transmission on");
-        if (error != NULL)
-        {
-                        *error = [self errorForCameraDisconnection];
-        }
-//        return NO;
     }
     
-    self.isConnectedToCamera = YES;
+    cameraFrameCallbackRunLoop = [NSRunLoop currentRunLoop];
+    [cameraFrameCallbackRunLoop run];
+}
+
+static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data)
+{
+    //	dc1394video_frame_t * frame;
+    NSLog(@"New frame available");
+    //	frame = dc1394_capture_dequeue_dma (c, DC1394_VIDEO1394_POLL);
+    //	err = dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_POLL, &frame);
     
-    
-//        [[NSNotificationCenter defaultCenter] postNotificationName:kSPCameraConnectedNotification object:nil];
+    //	if (frame) {
+    //		/* do something with the data here */
+    //
+    //		dc1394_capture_enqueue_dma (c, frame);
+    //	}
 }
 
 - (BOOL)disconnectFromIIDCCamera;
