@@ -9,6 +9,18 @@
 
 #define LOOPSWITHOUTFRAMEBEFOREERROR 30
 
+const char* Video_Mode_Strings[] = {"DC1394_VIDEO_MODE_160x120_YUV444", "DC1394_VIDEO_MODE_320x240_YUV422", "DC1394_VIDEO_MODE_640x480_YUV411",
+                                    "DC1394_VIDEO_MODE_640x480_YUV422", "DC1394_VIDEO_MODE_640x480_RGB8", "DC1394_VIDEO_MODE_640x480_MONO8",
+                                    "DC1394_VIDEO_MODE_640x480_MONO16", "DC1394_VIDEO_MODE_800x600_YUV422", "DC1394_VIDEO_MODE_800x600_RGB8",
+                                    "DC1394_VIDEO_MODE_800x600_MONO8", "DC1394_VIDEO_MODE_1024x768_YUV422", "DC1394_VIDEO_MODE_1024x768_RGB8",
+                                    "DC1394_VIDEO_MODE_1024x768_MONO8", "DC1394_VIDEO_MODE_800x600_MONO16", "DC1394_VIDEO_MODE_1024x768_MONO16",
+                                    "DC1394_VIDEO_MODE_1280x960_YUV422", "DC1394_VIDEO_MODE_1280x960_RGB8", "DC1394_VIDEO_MODE_1280x960_MONO8",
+                                    "DC1394_VIDEO_MODE_1600x1200_YUV422", "DC1394_VIDEO_MODE_1600x1200_RGB8", "DC1394_VIDEO_MODE_1600x1200_MONO8",
+                                    "DC1394_VIDEO_MODE_1280x960_MONO16", "DC1394_VIDEO_MODE_1600x1200_MONO16", "DC1394_VIDEO_MODE_EXIF",
+                                    "DC1394_VIDEO_MODE_FORMAT7_0", "DC1394_VIDEO_MODE_FORMAT7_1", "DC1394_VIDEO_MODE_FORMAT7_2",
+                                    "DC1394_VIDEO_MODE_FORMAT7_3", "DC1394_VIDEO_MODE_FORMAT7_4", "DC1394_VIDEO_MODE_FORMAT7_5",
+                                    "DC1394_VIDEO_MODE_FORMAT7_6", "DC1394_VIDEO_MODE_FORMAT7_7"};
+
 #pragma mark -
 #pragma mark Frame grabbing
 
@@ -226,6 +238,21 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 //    dc1394_capture_stop(camera);
 }
 
+- (BOOL)setVideoMode:(dc1394video_mode_t)mode;
+{
+    BOOL modeSet = NO;
+    
+    if (![self videoModeIsSupported:mode]) {
+        return modeSet;
+    }
+    else
+    {
+        dc1394_video_set_mode(_camera, mode);
+        modeSet = YES;
+        return modeSet;
+    }
+}
+
 - (BOOL)videoModeIsSupported:(dc1394video_mode_t)mode;
 {
     unsigned int currentVideoMode;
@@ -234,6 +261,8 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     for (currentVideoMode = 0; currentVideoMode < _supportedVideoModes.num; currentVideoMode++)
     {
         NSLog(@"Current Video Mode: %u", _supportedVideoModes.modes[currentVideoMode]);
+        // The enum containing the modes starts at an index of 64, so to output the appropriate string you need to subtract 64 from the current index. -JKC
+        NSLog(@"Current Video Mode: %s", Video_Mode_Strings[_supportedVideoModes.modes[currentVideoMode] - 64]);
         
         if (_supportedVideoModes.modes[currentVideoMode] == mode)
         {
@@ -525,7 +554,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data)
     // This is a placeholder, in case we need error handling of different types for the camera
     return YES;
 }
-
 
 #pragma mark -
 #pragma mark Accessor methods
