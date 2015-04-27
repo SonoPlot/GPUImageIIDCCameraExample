@@ -209,33 +209,26 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 
 - (void)startCameraCapture;
 {
-    NSLog(@"Start Camera Capture began");
     frameGrabTimedOutOnce = NO;
     sequentialMissedCameraFrames = 0;
 
-    if (cameraFrameCallbackRunLoop == nil)
+    if (cameraFrameCallbackThread == nil)
     {
         [self performSelectorInBackground:@selector(threadForActivationOfCamera) withObject:nil];
     }
     else
     {
-        if (dc1394_video_set_transmission(_camera,DC1394_ON) != DC1394_SUCCESS)
-        {
-            NSLog(@"Error in setting transmission on");
-        }
+        [self performSelector:@selector(threadForActivationOfCamera) onThread:cameraFrameCallbackThread withObject:nil waitUntilDone:NO];
     }
 }
 
 - (void)stopCameraCapture;
 {
-    NSLog(@"Stop Camera Capture began");
     if (dc1394_video_set_transmission(_camera,DC1394_OFF) != DC1394_SUCCESS)
     {
         NSLog(@"Error in setting transmission on");
     }
-    
-    // Why is this commented out? Are we not actually stopping the camera at this point in time? -JKC
-//    dc1394_capture_stop(camera);
+    dc1394_capture_stop(_camera);
 }
 
 - (BOOL)setVideoMode:(dc1394video_mode_t)mode;
@@ -275,6 +268,7 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 
 - (void)threadForActivationOfCamera;
 {
+    cameraShouldPoll = YES;
     dc1394_capture_set_callback(_camera, cameraFrameReadyCallback, (__bridge void *)(self));
     
     if (dc1394_capture_setup(_camera, NUM_BUFFERS, DC1394_CAPTURE_FLAGS_DEFAULT) != DC1394_SUCCESS)
@@ -291,9 +285,19 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     {
         NSLog(@"Error in setting transmission on");
     }
-    
-    cameraFrameCallbackRunLoop = [NSRunLoop currentRunLoop];
-    [cameraFrameCallbackRunLoop run];
+ 
+    if (cameraFrameCallbackThread == nil)
+    {
+        cameraFrameCallbackThread = [NSThread currentThread];
+        
+        cameraFrameCallbackRunLoop = [NSRunLoop currentRunLoop];
+        do {
+            [cameraFrameCallbackRunLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+        } while (cameraShouldPoll);
+
+//        cameraFrameCallbackRunLoop = [NSRunLoop currentRunLoop];
+//        [cameraFrameCallbackRunLoop run];
+    }
 }
 
 static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data)
