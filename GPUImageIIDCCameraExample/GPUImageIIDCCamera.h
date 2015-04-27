@@ -46,6 +46,8 @@ extern NSString *const GPUImageCameraErrorDomain;
     // Dispatch Queue
     dispatch_queue_t cameraDispatchQueue;
     NSRunLoop *cameraFrameCallbackRunLoop;
+    NSThread *cameraFrameCallbackThread;
+    BOOL cameraShouldPoll;
 }
 
 @property(readwrite) BOOL isCaptureInProgress;
