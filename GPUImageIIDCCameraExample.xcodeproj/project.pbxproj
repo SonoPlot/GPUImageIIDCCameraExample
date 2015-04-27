@@ -19,6 +19,8 @@
 		79E62F501ABB21DF00019A4E /* GPUImageIIDCCamera.m in Sources */ = {isa = PBXBuildFile; fileRef = 79E62F4F1ABB21DF00019A4E /* GPUImageIIDCCamera.m */; };
 		79E62F891ABC9B2C00019A4E /* libdc1394.22.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 79E62F871ABC9B2C00019A4E /* libdc1394.22.dylib */; };
 		79E62F8A1ABC9B2C00019A4E /* libusb-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 79E62F881ABC9B2C00019A4E /* libusb-1.0.0.dylib */; };
+		79EF90E51AEE9F1E007F2755 /* GPUImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 79EF90E21AEAD020007F2755 /* GPUImage.framework */; };
+		79EF90E81AEE9F3B007F2755 /* GPUImage.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 79EF90E21AEAD020007F2755 /* GPUImage.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,6 +29,13 @@
 			containerPortal = 794F091B1AE95D1200CB3872 /* GPUImageMac.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = BCA3F31C17239B6500E28AEC;
+			remoteInfo = GPUImage;
+		};
+		79EF90E61AEE9F29007F2755 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 794F091B1AE95D1200CB3872 /* GPUImageMac.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = BCA3F31B17239B6500E28AEC;
 			remoteInfo = GPUImage;
 		};
 /* End PBXContainerItemProxy section */
@@ -38,6 +47,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				79EF90E81AEE9F3B007F2755 /* GPUImage.framework in CopyFiles */,
 				79D80A811AD817600016D0BB /* libdc1394.22.dylib in CopyFiles */,
 				79D80A821AD817600016D0BB /* libusb-1.0.0.dylib in CopyFiles */,
 			);
@@ -69,6 +79,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				79EF90E51AEE9F1E007F2755 /* GPUImage.framework in Frameworks */,
 				79D8003D1ACC3E0200D79622 /* Accelerate.framework in Frameworks */,
 				79E62F8A1ABC9B2C00019A4E /* libusb-1.0.0.dylib in Frameworks */,
 				79E62F891ABC9B2C00019A4E /* libdc1394.22.dylib in Frameworks */,
@@ -155,6 +166,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				79EF90E71AEE9F29007F2755 /* PBXTargetDependency */,
 			);
 			name = GPUImageIIDCCameraExample;
 			productName = GPUImageIIDCCameraExample;
@@ -235,6 +247,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		79EF90E71AEE9F29007F2755 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = GPUImage;
+			targetProxy = 79EF90E61AEE9F29007F2755 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		79E62F271ABB211A00019A4E /* MainMenu.xib */ = {

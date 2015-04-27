@@ -80,7 +80,7 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     cameraDispatchQueue = dispatch_queue_create("CameraDispatchQueue", NULL);
     
     // Assuming these are the initial values. Need to figure out how to coordinate these with the camera-specific values. -JKC
-    _isCaptureInProgress= YES;
+    _isCaptureInProgress= NO;
     _isConnectedToCamera = NO;
     numberOfCameraToUse = 0;
     _frameSize = CGSizeMake(640, 480);
@@ -112,7 +112,6 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 {
     // Shut down run loop, if necessary
     
-    [super dealloc];
 }
 
 #pragma mark -
@@ -198,6 +197,7 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 
 - (void)startCameraCapture;
 {
+    NSLog(@"Start Camera Capture began");
     frameGrabTimedOutOnce = NO;
     sequentialMissedCameraFrames = 0;
 
@@ -216,18 +216,39 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 
 - (void)stopCameraCapture;
 {
+    NSLog(@"Stop Camera Capture began");
     if (dc1394_video_set_transmission(_camera,DC1394_OFF) != DC1394_SUCCESS)
     {
         NSLog(@"Error in setting transmission on");
     }
+    
+    // Why is this commented out? Are we not actually stopping the camera at this point in time? -JKC
 //    dc1394_capture_stop(camera);
+}
+
+- (BOOL)videoModeIsSupported:(dc1394video_mode_t)mode;
+{
+    unsigned int currentVideoMode;
+    BOOL modeFound = NO;
+    
+    for (currentVideoMode = 0; currentVideoMode < _supportedVideoModes.num; currentVideoMode++)
+    {
+        NSLog(@"Current Video Mode: %u", _supportedVideoModes.modes[currentVideoMode]);
+        
+        if (_supportedVideoModes.modes[currentVideoMode] == mode)
+        {
+            modeFound = YES;
+        }
+    }
+    
+    return modeFound;
 }
 
 - (void)threadForActivationOfCamera;
 {
-    dc1394_capture_set_callback(camera, cameraFrameReadyCallback, (__bridge void *)(self));
+    dc1394_capture_set_callback(_camera, cameraFrameReadyCallback, (__bridge void *)(self));
     
-    if (dc1394_capture_setup(camera, NUM_BUFFERS, DC1394_CAPTURE_FLAGS_DEFAULT) != DC1394_SUCCESS)
+    if (dc1394_capture_setup(_camera, NUM_BUFFERS, DC1394_CAPTURE_FLAGS_DEFAULT) != DC1394_SUCCESS)
     {
         NSLog(@"Error in capture setup");
     }
@@ -237,7 +258,7 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     frameGrabTimedOutOnce = NO;
     sequentialMissedCameraFrames = 0;
     
-    if (dc1394_video_set_transmission(camera,DC1394_ON) != DC1394_SUCCESS)
+    if (dc1394_video_set_transmission(_camera,DC1394_ON) != DC1394_SUCCESS)
     {
         NSLog(@"Error in setting transmission on");
     }
@@ -358,8 +379,157 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data)
 }
 
 
-// Access and override the getters for the camera properties. -JKC
-// Access and override the setters for the camera properties. -JKC
+
+
+/*
+#pragma mark -
+#pragma mark Frame grabbing
+// Where does this get called?? In the original code, it's part of the OpenGL pipeline. -JKC
+// This is where you would update settings inside the asychronous dispatch queue, except I have it on the controller class... D'oh! -JKC
+- (BOOL)grabNewVideoFrame:(NSError **)error;
+{
+    int err = 0;
+    dc1394video_frame_t * frame;
+    
+    err = dc1394_capture_dequeue(_camera, DC1394_CAPTURE_POLICY_POLL, &frame);
+    
+    if (err != DC1394_SUCCESS)
+    {
+        // Serious error with the camera that needs to be presented
+        // Need to figure out how to detangle this from a notification. -JKC
+        // Want to know how to handle this!! I assume it's rather important. -JKC
+//        [[NSNotificationCenter defaultCenter] postNotificationName:kSPCameraDisconnectedNotification object:nil];
+//        return NO;
+    }
+    
+    if (frame != NULL)
+    {
+        while (frame->frames_behind > 2)
+        {
+            dc1394_capture_enqueue(_camera, frame);
+            dc1394_capture_dequeue(_camera, DC1394_CAPTURE_POLICY_POLL, &frame);
+            if (frame == NULL)
+            {
+                break;
+            }
+            else
+            {
+            }
+        }
+        
+        if (frame == NULL)
+        {
+            return NO;
+        }
+        
+        // We were doing conditional logic for the YUV remapping. -JKC
+        dc1394_capture_enqueue(_camera, frame);
+        
+        sequentialMissedCameraFrames = 0;
+        frameGrabTimedOutOnce = NO;
+        
+        // How much of this are we still responsible for?? -JKC
+        // This seems slightly less pertinent than just grabbing frames?? -JKC
+//        if (_automaticLightingCorrectionEnabled)
+//        {
+//            [self adjustLightSensitivity];
+//        }
+//        
+//        if (autoSettingsToChange != 0)
+//        {
+//            [self updateCameraAutoSettings];
+//        }
+//        if (settingsToChange != 0)
+//        {
+//            [self updateCameraSettings];
+//        
+//            previousGain = _gain * FILTERFACTORFORSMOOTHINGCAMERAVALUES + (1.0 - FILTERFACTORFORSMOOTHINGCAMERAVALUES) * previousGain;
+//            previousExposure =  _exposure * FILTERFACTORFORSMOOTHINGCAMERAVALUES + (1.0 - FILTERFACTORFORSMOOTHINGCAMERAVALUES) * previousExposure;
+//            //			previousGain = gain;
+//        }
+//        
+//        [self encodeVideoFrameToDiskIfNeeded];
+    
+        return YES;
+    }
+    else
+    {
+        sequentialMissedCameraFrames++;
+        
+        if (sequentialMissedCameraFrames > LOOPSWITHOUTFRAMEBEFOREERROR)
+        {
+            if (frameGrabTimedOutOnce)
+            {
+                //				err = DC1394_FAILURE;
+//                [[NSNotificationCenter defaultCenter] postNotificationName:kSPCameraDisconnectedNotification object:nil];
+            }
+            else
+            {
+                sequentialMissedCameraFrames = 0;
+                frameGrabTimedOutOnce = YES;
+                dc1394_video_set_transmission(_camera,DC1394_OFF);
+                dc1394_video_set_transmission(_camera,DC1394_ON);
+            }
+        }		
+    }
+    
+    return NO;
+}
+
+
+
+// I don't know about this?? There are two declarations of this in the orginal code and it's called by the video view??
+// It's the only place in the code that grabNewVideoFrame is called. -JKC
+- (BOOL)isNewCameraFrameAvailable;
+{
+    if (!_isConnectedToCamera)
+    {
+        return NO;
+    }
+    
+    NSError *error = nil;
+    BOOL success = [self grabNewVideoFrame:&error];
+    	if (!success)
+    	{
+    		NSLog(@"No frame available");
+    	}
+    
+    return success;
+}
+*/
+
+#pragma mark -
+#pragma mark Error handling methods
+
+- (NSError *)errorForCameraDisconnection;
+{
+    NSString *errorDescription, *recoverySuggestion;
+    NSArray *recoveryOptions;
+    
+    errorDescription = NSLocalizedString(@"The CCD camera is not connected.", @"");
+    recoverySuggestion = NSLocalizedString(@"Check the Firewire cable connections between the CCD camera and the control computer.  Unplug and reconnect the cables, if necessary, to resume the video feed.", @"");
+    recoveryOptions = [NSArray arrayWithObjects:NSLocalizedString(@"OK", @""), nil];
+    
+    NSDictionary *errorProperties = [NSDictionary dictionaryWithObjectsAndKeys:
+                                     errorDescription, NSLocalizedDescriptionKey,
+                                     recoverySuggestion, NSLocalizedRecoverySuggestionErrorKey,
+                                     recoveryOptions, NSLocalizedRecoveryOptionsErrorKey,
+                                     self, NSRecoveryAttempterErrorKey,
+                                     nil];
+    return [NSError errorWithDomain:GPUImageCameraErrorDomain code:0 userInfo:errorProperties];
+    
+}
+
+- (BOOL)attemptRecoveryFromError:(NSError *)error optionIndex:(NSUInteger)recoveryOptionIndex
+{
+    // This is a placeholder, in case we need error handling of different types for the camera
+    return YES;
+}
+
+
+#pragma mark -
+#pragma mark Accessor methods
+
 - (void)setBrightness:(NSInteger)newValue
 {
     dispatch_async(cameraDispatchQueue, ^{
@@ -525,150 +695,5 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data)
     return whiteBalanceV;
 }
 
-
-/*
-#pragma mark -
-#pragma mark Frame grabbing
-// Where does this get called?? In the original code, it's part of the OpenGL pipeline. -JKC
-// This is where you would update settings inside the asychronous dispatch queue, except I have it on the controller class... D'oh! -JKC
-- (BOOL)grabNewVideoFrame:(NSError **)error;
-{
-    int err = 0;
-    dc1394video_frame_t * frame;
-    
-    err = dc1394_capture_dequeue(_camera, DC1394_CAPTURE_POLICY_POLL, &frame);
-    
-    if (err != DC1394_SUCCESS)
-    {
-        // Serious error with the camera that needs to be presented
-        // Need to figure out how to detangle this from a notification. -JKC
-        // Want to know how to handle this!! I assume it's rather important. -JKC
-//        [[NSNotificationCenter defaultCenter] postNotificationName:kSPCameraDisconnectedNotification object:nil];
-//        return NO;
-    }
-    
-    if (frame != NULL)
-    {
-        while (frame->frames_behind > 2)
-        {
-            dc1394_capture_enqueue(_camera, frame);
-            dc1394_capture_dequeue(_camera, DC1394_CAPTURE_POLICY_POLL, &frame);
-            if (frame == NULL)
-            {
-                break;
-            }
-            else
-            {
-            }
-        }
-        
-        if (frame == NULL)
-        {
-            return NO;
-        }
-        
-        // We were doing conditional logic for the YUV remapping. -JKC
-        dc1394_capture_enqueue(_camera, frame);
-        
-        sequentialMissedCameraFrames = 0;
-        frameGrabTimedOutOnce = NO;
-        
-        // How much of this are we still responsible for?? -JKC
-        // This seems slightly less pertinent than just grabbing frames?? -JKC
-//        if (_automaticLightingCorrectionEnabled)
-//        {
-//            [self adjustLightSensitivity];
-//        }
-//        
-//        if (autoSettingsToChange != 0)
-//        {
-//            [self updateCameraAutoSettings];
-//        }
-//        if (settingsToChange != 0)
-//        {
-//            [self updateCameraSettings];
-//        
-//            previousGain = _gain * FILTERFACTORFORSMOOTHINGCAMERAVALUES + (1.0 - FILTERFACTORFORSMOOTHINGCAMERAVALUES) * previousGain;
-//            previousExposure =  _exposure * FILTERFACTORFORSMOOTHINGCAMERAVALUES + (1.0 - FILTERFACTORFORSMOOTHINGCAMERAVALUES) * previousExposure;
-//            //			previousGain = gain;
-//        }
-//        
-//        [self encodeVideoFrameToDiskIfNeeded];
-    
-        return YES;
-    }
-    else
-    {
-        sequentialMissedCameraFrames++;
-        
-        if (sequentialMissedCameraFrames > LOOPSWITHOUTFRAMEBEFOREERROR)
-        {
-            if (frameGrabTimedOutOnce)
-            {
-                //				err = DC1394_FAILURE;
-//                [[NSNotificationCenter defaultCenter] postNotificationName:kSPCameraDisconnectedNotification object:nil];
-            }
-            else
-            {
-                sequentialMissedCameraFrames = 0;
-                frameGrabTimedOutOnce = YES;
-                dc1394_video_set_transmission(_camera,DC1394_OFF);
-                dc1394_video_set_transmission(_camera,DC1394_ON);
-            }
-        }		
-    }
-    
-    return NO;
-}
-
-
-
-// I don't know about this?? There are two declarations of this in the orginal code and it's called by the video view??
-// It's the only place in the code that grabNewVideoFrame is called. -JKC
-- (BOOL)isNewCameraFrameAvailable;
-{
-    if (!_isConnectedToCamera)
-    {
-        return NO;
-    }
-    
-    NSError *error = nil;
-    BOOL success = [self grabNewVideoFrame:&error];
-    	if (!success)
-    	{
-    		NSLog(@"No frame available");
-    	}
-    
-    return success;
-}
-*/
-
-#pragma mark -
-#pragma mark Error handling methods
-
-- (NSError *)errorForCameraDisconnection;
-{
-    NSString *errorDescription, *recoverySuggestion;
-    NSArray *recoveryOptions;
-    
-    errorDescription = NSLocalizedString(@"The CCD camera is not connected.", @"");
-    recoverySuggestion = NSLocalizedString(@"Check the Firewire cable connections between the CCD camera and the control computer.  Unplug and reconnect the cables, if necessary, to resume the video feed.", @"");
-    recoveryOptions = [NSArray arrayWithObjects:NSLocalizedString(@"OK", @""), nil];
-    
-    NSDictionary *errorProperties = [NSDictionary dictionaryWithObjectsAndKeys:
-                                     errorDescription, NSLocalizedDescriptionKey,
-                                     recoverySuggestion, NSLocalizedRecoverySuggestionErrorKey,
-                                     recoveryOptions, NSLocalizedRecoveryOptionsErrorKey,
-                                     self, NSRecoveryAttempterErrorKey,
-                                     nil];
-    return [NSError errorWithDomain:GPUImageCameraErrorDomain code:0 userInfo:errorProperties];
-    
-}
-
-- (BOOL)attemptRecoveryFromError:(NSError *)error optionIndex:(NSUInteger)recoveryOptionIndex
-{
-    // This is a placeholder, in case we need error handling of different types for the camera
-    return YES;
-}
 
 @end

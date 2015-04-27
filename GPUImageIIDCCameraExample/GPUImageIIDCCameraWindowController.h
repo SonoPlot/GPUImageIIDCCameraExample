@@ -15,7 +15,9 @@ typedef enum  { UNIBRAIN, FLEA2G, BLACKFLY} SPCameraType;
     
 }
 
+@property (weak) IBOutlet NSButton *imageCaptureButton;
 @property (weak) IBOutlet GPUImageView *videoView;
 @property(readonly) SPCameraType cameraType;
+- (IBAction)imageCapture:(id)sender;
 
 @end

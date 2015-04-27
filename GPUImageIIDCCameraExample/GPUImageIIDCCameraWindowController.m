@@ -27,27 +27,7 @@
     NSError *error = nil;
     [iidcCamera connectToCamera:&error];
     
-    BOOL cameraFound = false;
-    
-    unsigned int currentVideoMode;
-    
-    for (currentVideoMode = 0; currentVideoMode < iidcCamera.supportedVideoModes.num; currentVideoMode++)
-    {        
-        if (iidcCamera.supportedVideoModes.modes[currentVideoMode] == DC1394_VIDEO_MODE_1280x960_YUV422)
-        {
-            _cameraType = FLEA2G;
-            cameraFound = true;
-        }
-        
-        if (iidcCamera.supportedVideoModes.modes[currentVideoMode] == DC1394_VIDEO_MODE_FORMAT7_0)
-        {
-            if (_cameraType != FLEA2G)
-            {
-                _cameraType = BLACKFLY;
-                cameraFound = true;
-            }
-        }
-    }
+    BOOL cameraFound = [iidcCamera videoModeIsSupported:DC1394_VIDEO_MODE_FORMAT7_0];
     
     NSLog(@"The camera was found: %hhd", cameraFound);
 }
@@ -86,6 +66,21 @@
     NSLog(@"Original Saturation Setting: %ld", iidcCamera.saturation);
     NSLog(@"Original White Balance U Setting: %ld", iidcCamera.whiteBalanceU);
     NSLog(@"Original White Balance V Setting: %ld", iidcCamera.whiteBalanceV);
+}
+
+
+- (IBAction)imageCapture:(id)sender {
+    
+    if (iidcCamera.isCaptureInProgress == NO) {
+        [iidcCamera startCameraCapture];
+        self.imageCaptureButton.title = @"Stop Image Capture";
+        iidcCamera.isCaptureInProgress = YES;
+    } else {
+        [iidcCamera stopCameraCapture];
+        self.imageCaptureButton.title = @"Start Image Capture";
+        iidcCamera.isCaptureInProgress = NO;
+    }
+    
 }
 
 #pragma MARK - GPUImage Code for Debugging Purposes

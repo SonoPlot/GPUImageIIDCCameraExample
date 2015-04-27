@@ -22,7 +22,7 @@ void uyvy411_2vuy422(const unsigned char *the411Frame, unsigned char *the422Fram
 void yuv422_2vuy422(const unsigned char *theYUVFrame, unsigned char *the422Frame, const unsigned int width, const unsigned int height, float *passbackLuminance);
 
 extern NSString *const GPUImageCameraErrorDomain;
-static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data);
+//static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data);
 
 // Does this class subclass NSObject because it needs to be separate from GPUImage for licensing reasons?? -JKC
 @interface GPUImageIIDCCamera : GPUImageOutput
@@ -75,6 +75,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data);
 - (BOOL)readAllSettingLimits:(NSError **)error;
 - (void)startCameraCapture;
 - (void)stopCameraCapture;
+- (BOOL)videoModeIsSupported:(dc1394video_mode_t)mode;
 //- (BOOL)grabNewVideoFrame:(NSError **)error;
 
 // Error handling methods
