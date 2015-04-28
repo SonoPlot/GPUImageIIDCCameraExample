@@ -2,6 +2,24 @@
 #import <GPUImage/GPUImage.h>
 #import <Accelerate/Accelerate.h>
 
+NSString *const kGPUImageYUV422ColorspaceConversionFragmentShaderString = SHADER_STRING
+(
+ varying vec2 textureCoordinate;
+ 
+ uniform sampler2DRect inputTexture;
+ 
+ void main()
+ {
+     // Output: R = Y1, G = U0, B = Y0, A = V0
+//     vec4 processedYUVBlock = texture2DRect(videoFrame, gl_TexCoord[0].st).abgr;
+     vec4 processedYUVBlock = texture2DRect(inputTexture, textureCoordinate.xy).abgr;
+     processedYUVBlock = ((processedYUVBlock - vec4(0.0, 0.5, 0.0, 0.5)) * vec4(0.9375 ,0.9219, 0.9375, 0.9219)) + vec4(0.0625, 0.5, 0.0625, 0.5);
+     
+     gl_FragColor = processedYUVBlock;
+ }
+ );
+
+
 #define MAX_PORTS   4
 #define MAX_CAMERAS 8
 #define NUM_BUFFERS 50
@@ -12,8 +30,29 @@
 #pragma mark -
 #pragma mark Frame grabbing
 
+@interface GPUImageIIDCCamera ()
+{
+    GLProgram *yuvConversionProgram;
+    GLint yuvConversionPositionAttribute, yuvConversionTextureCoordinateAttribute;
+    GLint yuvConversionInputTextureUniform;
+    
+    GLuint yuvUploadTexture;
+    
+    CMTime currentFrameTime;
+    NSTimeInterval actualTimeOfLastUpdate;
+    
+    GPUImageRotationMode outputRotation, internalRotation;
+}
+
+// Frame processing and upload
+- (void)processVideoFrame:(unsigned char *)videoFrame;
+- (void)updateCurrentFrameTime;
+- (void)initializeUploadTextureForSize:(CGSize)textureSize frameData:(unsigned char *)videoFrame;
+
+@end
+
 // Standard C function for remapping 4:1:1 (UYVY) image to 4:2:2 (2VUY)
-void uyvy411_2vuy422(const unsigned char *the411Frame, unsigned char *the422Frame, const unsigned int width, const unsigned int height, float *passbackLuminance)
+void uyvy411_2vuy422(const unsigned char *the411Frame, unsigned char *the422Frame, const unsigned int width, const unsigned int height)
 {
     int i =0, j=0;
     unsigned int numPixels = width * height;
@@ -52,16 +91,11 @@ void uyvy411_2vuy422(const unsigned char *the411Frame, unsigned char *the422Fram
         the422Frame[j++] = (((y3 * 240) >> 8) + 16);
         the422Frame[j++] = (((v * 236) >> 8) + 128);
     }
-    
-    // Normalize to 1.0
-    float instantaneousLuminance = (((float)luminanceTotal / (float)luminanceSamples) - 16.0f) / 219.0f;
-    *passbackLuminance = (instantaneousLuminance * FILTERFACTORFORSMOOTHINGCAMERAVALUES) + (1.0f - FILTERFACTORFORSMOOTHINGCAMERAVALUES) * (*passbackLuminance);
 }
 
 #define SHOULDFLIPFRAME 1
 
-// Brad said to remove the passbackLuminance parameter, but the code wouldn't build without it. Probably missing something. -JKC
-void yuv422_2vuy422(const unsigned char *theYUVFrame, unsigned char *the422Frame, const unsigned int width, const unsigned int height, float *passbackLuminance)
+void yuv422_2vuy422(const unsigned char *theYUVFrame, unsigned char *the422Frame, const unsigned int width, const unsigned int height)
 {
     memcpy(the422Frame, theYUVFrame, width * height * 2);
 }
@@ -92,18 +126,42 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     previousExposure = 0.0;
     frameIntervalCounter = 0;
     
-    // Handle camera disconnection
-    // Need to figure out where this block is called. -JKC
-    // Should this be int he initializer or should it be its own method?? What is going on here? -JKC
-//    void(^cameraDisconnection)(void) = ^(void){
-//        NSError *error = [self errorForCameraDisconnection];
-//        runOnMainQueueWithoutDeadlocking(^{
-//            // TODO: Use a camera-window-modal sheet instead of this document-modal error
-//            [NSApp presentError:error];
-//        });
-//        
-//        [self disconnectFromIIDCCamera];
-//    };
+    runSynchronouslyOnVideoProcessingQueue(^{
+        
+        [GPUImageContext useImageProcessingContext];
+        yuvConversionProgram = [[GPUImageContext sharedImageProcessingContext] programForVertexShaderString:kGPUImageVertexShaderString fragmentShaderString:kGPUImageYUV422ColorspaceConversionFragmentShaderString];
+        
+        if (!yuvConversionProgram.initialized)
+        {
+            [yuvConversionProgram addAttribute:@"position"];
+            [yuvConversionProgram addAttribute:@"inputTextureCoordinate"];
+            
+            if (![yuvConversionProgram link])
+            {
+                NSString *progLog = [yuvConversionProgram programLog];
+                NSLog(@"Program link log: %@", progLog);
+                NSString *fragLog = [yuvConversionProgram fragmentShaderLog];
+                NSLog(@"Fragment shader compile log: %@", fragLog);
+                NSString *vertLog = [yuvConversionProgram vertexShaderLog];
+                NSLog(@"Vertex shader compile log: %@", vertLog);
+                yuvConversionProgram = nil;
+                NSAssert(NO, @"Filter shader link failed");
+            }
+        }
+        
+        yuvConversionPositionAttribute = [yuvConversionProgram attributeIndex:@"position"];
+        yuvConversionTextureCoordinateAttribute = [yuvConversionProgram attributeIndex:@"inputTextureCoordinate"];
+        yuvConversionInputTextureUniform = [yuvConversionProgram uniformIndex:@"inputTexture"];
+        
+        [GPUImageContext setActiveShaderProgram:yuvConversionProgram];
+        
+        glEnableVertexAttribArray(yuvConversionPositionAttribute);
+        glEnableVertexAttribArray(yuvConversionTextureCoordinateAttribute);
+        
+        glEnable(GL_TEXTURE_RECTANGLE_EXT);
+
+    });
+
     
     return self;
 }
@@ -313,6 +371,185 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data)
 }
 
 #pragma mark -
+#pragma mark Frame processing and upload
+
+#define INITIALFRAMESTOIGNOREFORBENCHMARK 5
+
+- (void)processVideoFrame:(unsigned char *)videoFrame;
+{
+    // Assume a YUV422 frame as input
+    
+//    if (capturePaused)
+//    {
+//        return;
+//    }
+    
+    CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
+    
+    [GPUImageContext useImageProcessingContext];
+
+    // Upload to YUV texture via direct memory access
+    GLfloat yuvImageHeight = (_frameSize.width * _frameSize.height * 2) / (_frameSize.width * 4);
+    glViewport(0, 0, (GLfloat)_frameSize.width, yuvImageHeight);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, yuvUploadTexture);
+
+    glTexSubImage2D (GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, _frameSize.width, yuvImageHeight, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, videoFrame);
+
+    // Perform colorspace conversion in shader
+    [self convertYUVToRGBOutput];
+
+    // Bind output framebuffer for result
+    
+    [self updateCurrentFrameTime];
+    
+    [self updateTargetsForVideoCameraUsingCacheTextureAtWidth:_frameSize.width height:_frameSize.height time:currentFrameTime];
+    
+    if (_runBenchmark)
+    {
+        numberOfFramesCaptured++;
+        if (numberOfFramesCaptured > INITIALFRAMESTOIGNOREFORBENCHMARK)
+        {
+            CFAbsoluteTime currentBenchmarkTime = (CFAbsoluteTimeGetCurrent() - startTime);
+            totalFrameTimeDuringCapture += currentBenchmarkTime;
+            NSLog(@"Average frame time : %f ms", [self averageFrameDurationDuringCapture]);
+            NSLog(@"Current frame time : %f ms", 1000.0 * currentBenchmarkTime);
+        }
+    }
+
+}
+
+- (void)convertYUVToRGBOutput;
+{
+    [GPUImageContext setActiveShaderProgram:yuvConversionProgram];
+    
+    // TODO: Add output image rotation to this
+    
+    outputFramebuffer = [[GPUImageContext sharedFramebufferCache] fetchFramebufferForSize:_frameSize textureOptions:self.outputTextureOptions onlyTexture:NO];
+    [outputFramebuffer activateFramebuffer];
+    
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    
+    static const GLfloat squareVertices[] = {
+        -1.0f, -1.0f,
+        1.0f, -1.0f,
+        -1.0f,  1.0f,
+        1.0f,  1.0f,
+    };
+    
+    GLfloat yuvImageHeight = (_frameSize.width * _frameSize.height * 2) / (_frameSize.width * 4);
+    
+    const GLfloat yuvConversionCoordinates[] = {
+        0.0, 0.0,
+        _frameSize.width, 0.0,
+        0.0, yuvImageHeight,
+        _frameSize.width, yuvImageHeight
+    };
+
+    
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, yuvUploadTexture);
+    glUniform1i(yuvConversionInputTextureUniform, 4);
+    
+    glVertexAttribPointer(yuvConversionPositionAttribute, 2, GL_FLOAT, 0, 0, squareVertices);
+    glVertexAttribPointer(yuvConversionTextureCoordinateAttribute, 2, GL_FLOAT, 0, 0, yuvConversionCoordinates);
+    
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+
+- (void)updateTargetsForVideoCameraUsingCacheTextureAtWidth:(int)bufferWidth height:(int)bufferHeight time:(CMTime)currentTime;
+{
+    // First, update all the framebuffers in the targets
+    for (id<GPUImageInput> currentTarget in targets)
+    {
+        if ([currentTarget enabled])
+        {
+            NSInteger indexOfObject = [targets indexOfObject:currentTarget];
+            NSInteger textureIndexOfTarget = [[targetTextureIndices objectAtIndex:indexOfObject] integerValue];
+            
+            if (currentTarget != self.targetToIgnoreForUpdates)
+            {
+                [currentTarget setInputRotation:outputRotation atIndex:textureIndexOfTarget];
+                [currentTarget setInputSize:CGSizeMake(bufferWidth, bufferHeight) atIndex:textureIndexOfTarget];
+                
+                [currentTarget setCurrentlyReceivingMonochromeInput:NO];
+                [currentTarget setInputFramebuffer:outputFramebuffer atIndex:textureIndexOfTarget];
+            }
+            else
+            {
+                [currentTarget setInputRotation:outputRotation atIndex:textureIndexOfTarget];
+                [currentTarget setInputFramebuffer:outputFramebuffer atIndex:textureIndexOfTarget];
+            }
+        }
+    }
+    
+    // Then release our hold on the local framebuffer to send it back to the cache as soon as it's no longer needed
+    [outputFramebuffer unlock];
+    
+    // Finally, trigger rendering as needed
+    for (id<GPUImageInput> currentTarget in targets)
+    {
+        if ([currentTarget enabled])
+        {
+            NSInteger indexOfObject = [targets indexOfObject:currentTarget];
+            NSInteger textureIndexOfTarget = [[targetTextureIndices objectAtIndex:indexOfObject] integerValue];
+            
+            if (currentTarget != self.targetToIgnoreForUpdates)
+            {
+                [currentTarget newFrameReadyAtTime:currentTime atIndex:textureIndexOfTarget];
+            }
+        }
+    }
+}
+
+- (void)initializeUploadTextureForSize:(CGSize)textureSize frameData:(unsigned char *)videoFrame;
+{
+    glActiveTexture(GL_TEXTURE3);
+    glEnable(GL_TEXTURE_RECTANGLE_EXT);
+    glGenTextures(1, &yuvUploadTexture);
+    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, yuvUploadTexture);
+    glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, textureSize.width * textureSize.height * 2, videoFrame);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE , GL_STORAGE_SHARED_APPLE);
+    
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    
+    //	glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE); // This reduces performance on read, for some reason
+    //	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    
+    glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, textureSize.width, (textureSize.width * textureSize.height * 2) / (textureSize.width * 4), 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, videoFrame);
+    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, 0);
+}
+
+- (CGFloat)averageFrameDurationDuringCapture;
+{
+    return (totalFrameTimeDuringCapture / (CGFloat)(numberOfFramesCaptured - INITIALFRAMESTOIGNOREFORBENCHMARK)) * 1000.0;
+}
+
+- (void)updateCurrentFrameTime;
+{
+    if(CMTIME_IS_INVALID(currentFrameTime))
+    {
+        currentFrameTime = CMTimeMakeWithSeconds(0, 600);
+        actualTimeOfLastUpdate = [NSDate timeIntervalSinceReferenceDate];
+    }
+    else
+    {
+        NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
+        NSTimeInterval diff = now - actualTimeOfLastUpdate;
+        currentFrameTime = CMTimeAdd(currentFrameTime, CMTimeMakeWithSeconds(diff, 600));
+        actualTimeOfLastUpdate = now;
+    }
+}
+
+#pragma mark -
 #pragma mark Settings
 
 // Do the camera setup for things like frame rate and size
@@ -381,126 +618,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data)
     
     return YES;
 }
-
-
-
-
-/*
-#pragma mark -
-#pragma mark Frame grabbing
-// Where does this get called?? In the original code, it's part of the OpenGL pipeline. -JKC
-// This is where you would update settings inside the asychronous dispatch queue, except I have it on the controller class... D'oh! -JKC
-- (BOOL)grabNewVideoFrame:(NSError **)error;
-{
-    int err = 0;
-    dc1394video_frame_t * frame;
-    
-    err = dc1394_capture_dequeue(_camera, DC1394_CAPTURE_POLICY_POLL, &frame);
-    
-    if (err != DC1394_SUCCESS)
-    {
-        // Serious error with the camera that needs to be presented
-        // Need to figure out how to detangle this from a notification. -JKC
-        // Want to know how to handle this!! I assume it's rather important. -JKC
-//        [[NSNotificationCenter defaultCenter] postNotificationName:kSPCameraDisconnectedNotification object:nil];
-//        return NO;
-    }
-    
-    if (frame != NULL)
-    {
-        while (frame->frames_behind > 2)
-        {
-            dc1394_capture_enqueue(_camera, frame);
-            dc1394_capture_dequeue(_camera, DC1394_CAPTURE_POLICY_POLL, &frame);
-            if (frame == NULL)
-            {
-                break;
-            }
-            else
-            {
-            }
-        }
-        
-        if (frame == NULL)
-        {
-            return NO;
-        }
-        
-        // We were doing conditional logic for the YUV remapping. -JKC
-        dc1394_capture_enqueue(_camera, frame);
-        
-        sequentialMissedCameraFrames = 0;
-        frameGrabTimedOutOnce = NO;
-        
-        // How much of this are we still responsible for?? -JKC
-        // This seems slightly less pertinent than just grabbing frames?? -JKC
-//        if (_automaticLightingCorrectionEnabled)
-//        {
-//            [self adjustLightSensitivity];
-//        }
-//        
-//        if (autoSettingsToChange != 0)
-//        {
-//            [self updateCameraAutoSettings];
-//        }
-//        if (settingsToChange != 0)
-//        {
-//            [self updateCameraSettings];
-//        
-//            previousGain = _gain * FILTERFACTORFORSMOOTHINGCAMERAVALUES + (1.0 - FILTERFACTORFORSMOOTHINGCAMERAVALUES) * previousGain;
-//            previousExposure =  _exposure * FILTERFACTORFORSMOOTHINGCAMERAVALUES + (1.0 - FILTERFACTORFORSMOOTHINGCAMERAVALUES) * previousExposure;
-//            //			previousGain = gain;
-//        }
-//        
-//        [self encodeVideoFrameToDiskIfNeeded];
-    
-        return YES;
-    }
-    else
-    {
-        sequentialMissedCameraFrames++;
-        
-        if (sequentialMissedCameraFrames > LOOPSWITHOUTFRAMEBEFOREERROR)
-        {
-            if (frameGrabTimedOutOnce)
-            {
-                //				err = DC1394_FAILURE;
-//                [[NSNotificationCenter defaultCenter] postNotificationName:kSPCameraDisconnectedNotification object:nil];
-            }
-            else
-            {
-                sequentialMissedCameraFrames = 0;
-                frameGrabTimedOutOnce = YES;
-                dc1394_video_set_transmission(_camera,DC1394_OFF);
-                dc1394_video_set_transmission(_camera,DC1394_ON);
-            }
-        }		
-    }
-    
-    return NO;
-}
-
-
-
-// I don't know about this?? There are two declarations of this in the orginal code and it's called by the video view??
-// It's the only place in the code that grabNewVideoFrame is called. -JKC
-- (BOOL)isNewCameraFrameAvailable;
-{
-    if (!_isConnectedToCamera)
-    {
-        return NO;
-    }
-    
-    NSError *error = nil;
-    BOOL success = [self grabNewVideoFrame:&error];
-    	if (!success)
-    	{
-    		NSLog(@"No frame available");
-    	}
-    
-    return success;
-}
-*/
 
 #pragma mark -
 #pragma mark Error handling methods
