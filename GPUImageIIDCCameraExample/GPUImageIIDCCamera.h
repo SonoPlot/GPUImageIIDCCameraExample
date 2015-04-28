@@ -84,10 +84,6 @@ extern NSString *const GPUImageCameraErrorDomain;
 - (void)stopCameraCapture;
 - (BOOL)videoModeIsSupported:(dc1394video_mode_t)mode;
 
-// Frame processing and upload
-- (void)processVideoFrame:(unsigned char *)videoFrame;
-- (CGFloat)averageFrameDurationDuringCapture;
-
 // Error handling methods
 - (NSError *)errorForCameraDisconnection;
 

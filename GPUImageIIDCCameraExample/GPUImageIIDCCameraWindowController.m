@@ -24,6 +24,10 @@
     
     iidcCamera = [[GPUImageIIDCCamera alloc] init];
 
+    filter = [[GPUImageGammaFilter alloc] init];
+    [iidcCamera addTarget:filter];
+    [filter addTarget:self.videoView];
+
     NSError *error = nil;
     [iidcCamera connectToCamera:&error];
     
