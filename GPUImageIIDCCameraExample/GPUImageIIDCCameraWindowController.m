@@ -78,13 +78,13 @@
 - (IBAction)imageCapture:(id)sender {
     
     if (iidcCamera.isCaptureInProgress == NO) {
+        [iidcCamera startCameraCapture];
         self.imageCaptureButton.title = @"Stop Image Capture";
         iidcCamera.isCaptureInProgress = YES;
-        [iidcCamera startCameraCapture];
     } else {
+        [iidcCamera stopCameraCapture];
         self.imageCaptureButton.title = @"Start Image Capture";
         iidcCamera.isCaptureInProgress = NO;
-        [iidcCamera stopCameraCapture];
     }
     
 }

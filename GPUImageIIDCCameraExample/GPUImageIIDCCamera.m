@@ -24,7 +24,6 @@ NSString *const kGPUImageYUV422ColorspaceConversionFragmentShaderString = SHADER
 
 #define LOOPSWITHOUTFRAMEBEFOREERROR 30
 
-
 #pragma mark -
 #pragma mark Frame grabbing
 
@@ -299,26 +298,6 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     }
     dc1394_capture_stop(_camera);
 }
-
-- (BOOL)setVideoMode:(dc1394video_mode_t)mode;
-{
-    BOOL modeSet = NO;
-    
-    if (![self videoModeIsSupported:mode]) {
-        return modeSet;
-    }
-    else
-    {
-        // Set the video mode
-        dc1394_video_set_mode(_camera, mode);
-        
-        modeSet = YES;
-        return modeSet;
-    }
-}
-
-// Method to set frame size. If the mode isn't Format 7, then use the hardcoded frame size. If it is, then set it.
-// Do I need to send the frame size in as a parameter if it isn't needed for non-Format 7?? Hmmm...
 
 - (BOOL)videoModeIsSupported:(dc1394video_mode_t)mode;
 {
