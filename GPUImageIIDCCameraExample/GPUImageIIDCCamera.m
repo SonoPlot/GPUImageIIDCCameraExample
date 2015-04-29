@@ -298,22 +298,7 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     dc1394_capture_stop(_camera);
 }
 
-- (BOOL)setVideoMode:(dc1394video_mode_t)mode;
-{
-    BOOL modeSet = NO;
-    
-    if (![self videoModeIsSupported:mode]) {
-        return modeSet;
-    }
-    else
-    {
-        // Set the video mode
-        dc1394_video_set_mode(_camera, mode);
-        
-        modeSet = YES;
-        return modeSet;
-    }
-}
+
 
 - (BOOL)videoModeIsSupported:(dc1394video_mode_t)mode;
 {
@@ -1010,6 +995,29 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     return currentMode;
 }
 
+- (void)setVideoMode:(dc1394video_mode_t)newMode;
+{
+    if (![self videoModeIsSupported:newMode]) {
+        NSLog(@"video mode was not supported");
+    }
+    else
+    {
+        // Set the video mode
+        dc1394_video_set_mode(_camera, newMode);
+    }
+}
+
+- (dc1394video_mode_t)videoMode
+{
+    __block dc1394video_mode_t currentMode;
+    
+    dispatch_async(cameraDispatchQueue, ^{
+        dc1394_video_get_mode(_camera, &currentMode);
+    });
+    
+    return currentMode;
+}
+
 // This must be done differently -JKC
 - (void)setWhiteBalance:(uint32_t)newWhiteBalanceU whiteBalanceV:(uint32_t)newWhiteBalanceV
 {
@@ -1081,10 +1089,10 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 
 - (void)setFrameSize:(CGSize)newSize
 {
-    if (_res >= 88) {
+    if (self.videoMode >= 88) {
         self.frameSize = newSize;
     } else {
-        switch (self.res) {
+        switch (self.videoMode) {
             case DC1394_VIDEO_MODE_160x120_YUV444:
                 self.frameSize = CGSizeMake(160, 120);
                 break;

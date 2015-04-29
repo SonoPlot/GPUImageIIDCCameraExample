@@ -13,8 +13,6 @@
     // Default GPUImage stuff to be replaced by the IIDC Camera stuff. -JKC
 //    [self runGPUImageCameraCode];
     [self setupCameraCode];
-    BOOL modeSet = [iidcCamera setVideoMode:DC1394_VIDEO_MODE_FORMAT7_0];
-    NSLog(@"Video Mode set correctly? %i", modeSet);
     
     NSError *error;
     [iidcCamera readAllSettingLimits:&error];
@@ -39,7 +37,7 @@
     // If it is, then set up the camera
     if (cameraFound) {
         // The Frame Size setter is dependent upon the video mode format, so that must come first. -JKC
-        iidcCamera.res = DC1394_VIDEO_MODE_FORMAT7_0;
+        iidcCamera.videoMode = DC1394_VIDEO_MODE_FORMAT7_0;
         iidcCamera.frameSize = CGSizeMake(644, 482);
         iidcCamera.operationMode = DC1394_OPERATION_MODE_1394B;
         iidcCamera.filmSpeed = DC1394_ISO_SPEED_800;
