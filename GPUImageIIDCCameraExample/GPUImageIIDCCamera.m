@@ -1027,6 +1027,19 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
         // Set the video mode
         dc1394_video_set_mode(_camera, newMode);
     }
+    
+    if (isBlackflyCamera)
+    {
+        if (newMode == DC1394_VIDEO_MODE_FORMAT7_0)
+        {
+            // Believe this is all necessary to guarantee solid USB 3.0 connections
+            dispatch_async(cameraDispatchQueue, ^{
+                dc1394_format7_set_packet_size(self.camera, DC1394_VIDEO_MODE_FORMAT7_0, 4000);
+                dc1394_format7_set_color_coding(self.camera, DC1394_VIDEO_MODE_FORMAT7_0, DC1394_COLOR_CODING_YUV422);
+                dc1394_format7_set_image_size(self.camera, DC1394_VIDEO_MODE_FORMAT7_0, 644, 482);
+            });
+        }
+    }
 }
 
 - (dc1394video_mode_t)videoMode
