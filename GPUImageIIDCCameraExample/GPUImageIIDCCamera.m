@@ -254,20 +254,6 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     dc1394_video_get_supported_modes(_camera, &_supportedVideoModes);
     self.isConnectedToCamera = YES;
 
-    // Temporary setup code for testing frame capture
-    // Some of the setup code is already wrapped and moved to the window controller.
-    // I think that the video mode has to be set before this can be done, which means that things are out of order.
-    // Brad mentioned subclassing this class for BlackFly specific stuff, perhaps do a subclass for Format 7 in general?? -JKC
-    dc1394_format7_set_packet_size(_camera, DC1394_VIDEO_MODE_FORMAT7_0, 4000);
-//    dc1394_video_set_framerate(camera,fps)
-    dc1394_format7_set_color_coding(_camera, DC1394_VIDEO_MODE_FORMAT7_0, DC1394_COLOR_CODING_YUV422);
-    dc1394_format7_set_image_size(_camera, DC1394_VIDEO_MODE_FORMAT7_0, 644, 482);
-				
-    // This is needed for turning on the LED for the USB 3.0 Blackfly
-    uint32_t registerValue;
-    dc1394_get_control_register(_camera, 0x19D0, &registerValue);
-    dc1394_set_control_register(_camera, 0x19D0, (registerValue | 1));
-
     return YES;
 }
 
