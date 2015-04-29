@@ -67,7 +67,7 @@ extern NSString *const GPUImageCameraErrorDomain;
 @property(readwrite) dc1394framerate_t fps;
 @property(readwrite) dc1394video_mode_t videoMode;
 @property(readonly) dc1394video_modes_t supportedVideoModes;
-@property(readwrite) dc1394speed_t filmSpeed;
+@property(readwrite) dc1394speed_t isoSpeed;
 @property(readwrite) dc1394camera_t *camera;
 @property(readwrite) dc1394operation_mode_t operationMode;
 
@@ -83,7 +83,7 @@ extern NSString *const GPUImageCameraErrorDomain;
 - (BOOL)readAllSettingLimits:(NSError **)error;
 - (void)startCameraCapture;
 - (void)stopCameraCapture;
-- (BOOL)videoModeIsSupported:(dc1394video_mode_t)mode;
+- (BOOL)supportsVideoMode:(dc1394video_mode_t)mode;
 
 // External device control
 - (void)turnOnLEDLight;

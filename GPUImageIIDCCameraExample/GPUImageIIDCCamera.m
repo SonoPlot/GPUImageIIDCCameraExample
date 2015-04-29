@@ -256,7 +256,7 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     // Determine if the camera is the specific Blackfly variant from Point Grey Research
     isBlackflyCamera = NO;
     
-    if ([self videoModeIsSupported:DC1394_VIDEO_MODE_FORMAT7_0] && ![self videoModeIsSupported:DC1394_VIDEO_MODE_1280x960_YUV422])
+    if ([self supportsVideoMode:DC1394_VIDEO_MODE_FORMAT7_0] && ![self supportsVideoMode:DC1394_VIDEO_MODE_1280x960_YUV422])
     {
         NSLog(@"Blackfly camera detected");
         isBlackflyCamera = YES;
@@ -295,7 +295,7 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     dc1394_capture_stop(_camera);
 }
 
-- (BOOL)videoModeIsSupported:(dc1394video_mode_t)mode;
+- (BOOL)supportsVideoMode:(dc1394video_mode_t)mode;
 {
     unsigned int currentVideoMode;
     BOOL modeFound = NO;
@@ -1019,7 +1019,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 
 - (void)setVideoMode:(dc1394video_mode_t)newMode;
 {
-    if (![self videoModeIsSupported:newMode]) {
+    if (![self supportsVideoMode:newMode]) {
         NSLog(@"video mode was not supported");
     }
     else
@@ -1104,14 +1104,14 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     return currentRate;
 }
 
-- (void)setFilmSpeed:(dc1394speed_t)newValue
+- (void)setIsoSpeed:(dc1394speed_t)newValue
 {
     dispatch_async(cameraDispatchQueue, ^{
         dc1394_video_set_iso_speed(_camera, newValue);
     });
 }
 
-- (dc1394speed_t)filmSpeed
+- (dc1394speed_t)isoSpeed
 {
     __block dc1394speed_t currentSpeed;
     
