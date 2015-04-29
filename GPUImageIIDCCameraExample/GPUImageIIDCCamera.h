@@ -36,6 +36,7 @@ extern NSString *const GPUImageCameraErrorDomain;
     NSInteger previousGain, previousExposure;
     float currentLuminance;
     NSUInteger frameIntervalCounter;
+    BOOL isBlackflyCamera; // Special-case tweaks for that one camera type
     
     // libdc1394 variables for the firewire control
     uint32_t numCameras;
@@ -83,7 +84,10 @@ extern NSString *const GPUImageCameraErrorDomain;
 - (void)startCameraCapture;
 - (void)stopCameraCapture;
 - (BOOL)videoModeIsSupported:(dc1394video_mode_t)mode;
-//- (BOOL)grabNewVideoFrame:(NSError **)error;
+
+// External device control
+- (void)turnOnLEDLight;
+- (void)turnOffLEDLight;
 
 // Error handling methods
 - (NSError *)errorForCameraDisconnection;

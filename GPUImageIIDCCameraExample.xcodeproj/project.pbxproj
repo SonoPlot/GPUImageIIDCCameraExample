@@ -20,7 +20,6 @@
 		79E62F8A1ABC9B2C00019A4E /* libusb-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 79E62F881ABC9B2C00019A4E /* libusb-1.0.0.dylib */; };
 		79EF90E51AEE9F1E007F2755 /* GPUImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 79EF90E21AEAD020007F2755 /* GPUImage.framework */; };
 		79EF90E81AEE9F3B007F2755 /* GPUImage.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 79EF90E21AEAD020007F2755 /* GPUImage.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		BC9D72C51AF1452E004CF9E5 /* GPUImageBlackflyCamera.m in Sources */ = {isa = PBXBuildFile; fileRef = BC9D72C41AF1452E004CF9E5 /* GPUImageBlackflyCamera.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,8 +70,6 @@
 		79E62F4F1ABB21DF00019A4E /* GPUImageIIDCCamera.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GPUImageIIDCCamera.m; path = GPUImageIIDCCameraExample/GPUImageIIDCCamera.m; sourceTree = "<group>"; };
 		79E62F871ABC9B2C00019A4E /* libdc1394.22.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libdc1394.22.dylib; path = Frameworks/libdc1394.22.dylib; sourceTree = "<group>"; };
 		79E62F881ABC9B2C00019A4E /* libusb-1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libusb-1.0.0.dylib"; path = "Frameworks/libusb-1.0.0.dylib"; sourceTree = "<group>"; };
-		BC9D72C31AF1452E004CF9E5 /* GPUImageBlackflyCamera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GPUImageBlackflyCamera.h; path = GPUImageIIDCCameraExample/GPUImageBlackflyCamera.h; sourceTree = "<group>"; };
-		BC9D72C41AF1452E004CF9E5 /* GPUImageBlackflyCamera.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GPUImageBlackflyCamera.m; path = GPUImageIIDCCameraExample/GPUImageBlackflyCamera.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,8 +151,6 @@
 			children = (
 				79E62F4E1ABB21DF00019A4E /* GPUImageIIDCCamera.h */,
 				79E62F4F1ABB21DF00019A4E /* GPUImageIIDCCamera.m */,
-				BC9D72C31AF1452E004CF9E5 /* GPUImageBlackflyCamera.h */,
-				BC9D72C41AF1452E004CF9E5 /* GPUImageBlackflyCamera.m */,
 			);
 			name = "Camera classes";
 			sourceTree = "<group>";
@@ -250,7 +245,6 @@
 			files = (
 				79E62F501ABB21DF00019A4E /* GPUImageIIDCCamera.m in Sources */,
 				79E62F241ABB211A00019A4E /* main.m in Sources */,
-				BC9D72C51AF1452E004CF9E5 /* GPUImageBlackflyCamera.m in Sources */,
 				79E62F221ABB211A00019A4E /* AppDelegate.m in Sources */,
 				79E62F4C1ABB21CA00019A4E /* GPUImageIIDCCameraWindowController.m in Sources */,
 			);

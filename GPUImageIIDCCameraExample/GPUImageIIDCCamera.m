@@ -252,6 +252,17 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     }
     
     dc1394_video_get_supported_modes(_camera, &_supportedVideoModes);
+    
+    // Determine if the camera is the specific Blackfly variant from Point Grey Research
+    isBlackflyCamera = NO;
+    
+    if ([self videoModeIsSupported:DC1394_VIDEO_MODE_FORMAT7_0] && ![self videoModeIsSupported:DC1394_VIDEO_MODE_1280x960_YUV422])
+    {
+        NSLog(@"Blackfly camera detected");
+        isBlackflyCamera = YES;
+    }
+    
+    
     self.isConnectedToCamera = YES;
 
     return YES;
@@ -283,8 +294,6 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     }
     dc1394_capture_stop(_camera);
 }
-
-
 
 - (BOOL)videoModeIsSupported:(dc1394video_mode_t)mode;
 {
@@ -621,6 +630,33 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
         NSTimeInterval diff = now - actualTimeOfLastUpdate;
         currentFrameTime = CMTimeAdd(currentFrameTime, CMTimeMakeWithSeconds(diff, 600));
         actualTimeOfLastUpdate = now;
+    }
+}
+
+#pragma mark -
+#pragma mark External device control
+
+- (void)turnOnLEDLight;
+{
+    if (isBlackflyCamera)
+    {
+        dispatch_async(cameraDispatchQueue, ^{
+            uint32_t registerValue;
+            dc1394_get_control_register(self.camera, 0x19D0, &registerValue);
+            dc1394_set_control_register(self.camera, 0x19D0, (registerValue | 1));
+        });
+    }
+}
+
+- (void)turnOffLEDLight;
+{
+    if (isBlackflyCamera)
+    {
+        dispatch_async(cameraDispatchQueue, ^{
+            uint32_t registerValue;
+            dc1394_get_control_register(self.camera, 0x19D0, &registerValue);
+            dc1394_set_control_register(self.camera, 0x19D0, (registerValue | 0));
+        });
     }
 }
 
