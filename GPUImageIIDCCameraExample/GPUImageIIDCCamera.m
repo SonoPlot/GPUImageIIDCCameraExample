@@ -1184,19 +1184,11 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     return currentSpeed;
 }
 
-// Do the camera setup for things like frame rate and size
-// Deal with large enum of video formats
-// Deal with the possibility of Format 7
 - (void)setFrameSize:(CGSize)newSize
 {
-    // Looking at the headers, the frame size is part of a struct associated with the frame. In the old code, the frame is instantiated
-    // when we try to capture a frame. Should I just not override the frame size and deal with this stuff in the capture frame code? -JKC
     if (_res >= 88) {
-        // If mode is Format 7, set the frame size directly
         self.frameSize = newSize;
     } else {
-        // If not, use the built in frame size; Is part of the format description.
-        // Do a giant switch statement here??
         switch (self.res) {
             case DC1394_VIDEO_MODE_160x120_YUV444:
                 self.frameSize = CGSizeMake(160, 120);
@@ -1207,85 +1199,37 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                 break;
                 
             case DC1394_VIDEO_MODE_640x480_YUV411:
-                self.frameSize = CGSizeMake(640, 480);
-                break;
-                
             case DC1394_VIDEO_MODE_640x480_YUV422:
-                self.frameSize = CGSizeMake(640, 480);
-                break;
-                
             case DC1394_VIDEO_MODE_640x480_RGB8:
-                self.frameSize = CGSizeMake(640, 480);
-                break;
-                
             case DC1394_VIDEO_MODE_640x480_MONO8:
-                self.frameSize = CGSizeMake(640, 480);
-                break;
-                
             case DC1394_VIDEO_MODE_640x480_MONO16:
                 self.frameSize = CGSizeMake(640, 480);
                 break;
                 
             case DC1394_VIDEO_MODE_800x600_YUV422:
-                self.frameSize = CGSizeMake(800, 600);
-                break;
-                
             case DC1394_VIDEO_MODE_800x600_RGB8:
-                self.frameSize = CGSizeMake(800, 600);
-                break;
-                
             case DC1394_VIDEO_MODE_800x600_MONO8:
-                self.frameSize = CGSizeMake(800, 600);
-                break;
-                
-            case DC1394_VIDEO_MODE_1024x768_YUV422:
-                self.frameSize = CGSizeMake(1024, 768);
-                break;
-                
-            case DC1394_VIDEO_MODE_1024x768_RGB8:
-                self.frameSize = CGSizeMake(1024, 768);
-                break;
-                
-            case DC1394_VIDEO_MODE_1024x768_MONO8:
-                self.frameSize = CGSizeMake(1024, 768);
-                break;
-                
             case DC1394_VIDEO_MODE_800x600_MONO16:
                 self.frameSize = CGSizeMake(800, 600);
                 break;
                 
+            case DC1394_VIDEO_MODE_1024x768_YUV422:
+            case DC1394_VIDEO_MODE_1024x768_RGB8:
+            case DC1394_VIDEO_MODE_1024x768_MONO8:
             case DC1394_VIDEO_MODE_1024x768_MONO16:
                 self.frameSize = CGSizeMake(1024, 768);
                 break;
                 
             case DC1394_VIDEO_MODE_1280x960_YUV422:
-                self.frameSize = CGSizeMake(1280, 960);
-                break;
-                
             case DC1394_VIDEO_MODE_1280x960_RGB8:
-                self.frameSize = CGSizeMake(1280, 960);
-                break;
-                
             case DC1394_VIDEO_MODE_1280x960_MONO8:
-                self.frameSize = CGSizeMake(1280, 960);
-                break;
-                
-            case DC1394_VIDEO_MODE_1600x1200_YUV422:
-                self.frameSize = CGSizeMake(1600, 1200);
-                break;
-                
-            case DC1394_VIDEO_MODE_1600x1200_RGB8:
-                self.frameSize = CGSizeMake(1600, 1200);
-                break;
-                
-            case DC1394_VIDEO_MODE_1600x1200_MONO8:
-                self.frameSize = CGSizeMake(1600, 1200);
-                break;
-                
             case DC1394_VIDEO_MODE_1280x960_MONO16:
                 self.frameSize = CGSizeMake(1280, 960);
                 break;
                 
+            case DC1394_VIDEO_MODE_1600x1200_YUV422:
+            case DC1394_VIDEO_MODE_1600x1200_RGB8:
+            case DC1394_VIDEO_MODE_1600x1200_MONO8:
             case DC1394_VIDEO_MODE_1600x1200_MONO16:
                 self.frameSize = CGSizeMake(1600, 1200);
                 break;
