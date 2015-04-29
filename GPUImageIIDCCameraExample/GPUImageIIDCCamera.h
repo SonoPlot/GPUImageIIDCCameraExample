@@ -18,8 +18,8 @@
 // Frame Rate/FPS
 
 // These are functions
-void uyvy411_2vuy422(const unsigned char *the411Frame, unsigned char *the422Frame, const unsigned int width, const unsigned int height, float *passbackLuminance);
-void yuv422_2vuy422(const unsigned char *theYUVFrame, unsigned char *the422Frame, const unsigned int width, const unsigned int height, float *passbackLuminance);
+void uyvy411_2vuy422(const unsigned char *the411Frame, unsigned char *the422Frame, const unsigned int width, const unsigned int height);
+void yuv422_2vuy422(const unsigned char *theYUVFrame, unsigned char *the422Frame, const unsigned int width, const unsigned int height);
 
 extern NSString *const GPUImageCameraErrorDomain;
 //static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data);
@@ -48,10 +48,15 @@ extern NSString *const GPUImageCameraErrorDomain;
     NSRunLoop *cameraFrameCallbackRunLoop;
     NSThread *cameraFrameCallbackThread;
     BOOL cameraShouldPoll;
+
+    // Benchmarking
+    NSUInteger numberOfFramesCaptured;
+    CGFloat totalFrameTimeDuringCapture;
 }
 
 @property(readwrite) BOOL isCaptureInProgress;
 @property(readwrite, nonatomic) BOOL isConnectedToCamera;
+@property(readwrite, nonatomic) BOOL runBenchmark;
 
 @property(readwrite, nonatomic) CGFloat luminanceSetPoint;
 @property(readwrite, nonatomic) CGSize frameSize;
