@@ -255,11 +255,10 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     self.isConnectedToCamera = YES;
 
     // Temporary setup code for testing frame capture
-    _frameSize = CGSizeMake(644, 482);
-    dc1394_video_set_operation_mode(_camera, DC1394_OPERATION_MODE_1394B);
-    dc1394_video_set_iso_speed(_camera, DC1394_ISO_SPEED_800);
+    // Some of the setup code is already wrapped and moved to the window controller.
+    // I think that the video mode has to be set before this can be done, which means that things are out of order.
+    // Brad mentioned subclassing this class for BlackFly specific stuff, perhaps do a subclass for Format 7 in general?? -JKC
     dc1394_format7_set_packet_size(_camera, DC1394_VIDEO_MODE_FORMAT7_0, 4000);
-    dc1394_video_set_mode(_camera,DC1394_VIDEO_MODE_FORMAT7_0);
 //    dc1394_video_set_framerate(camera,fps)
     dc1394_format7_set_color_coding(_camera, DC1394_VIDEO_MODE_FORMAT7_0, DC1394_COLOR_CODING_YUV422);
     dc1394_format7_set_image_size(_camera, DC1394_VIDEO_MODE_FORMAT7_0, 644, 482);
@@ -991,6 +990,24 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     });
     
     return currentValue;
+}
+
+- (void)setOperationMode:(dc1394operation_mode_t)newValue
+{
+    dispatch_async(cameraDispatchQueue, ^{
+        dc1394_video_set_operation_mode(_camera, newValue);
+    });
+}
+
+- (dc1394operation_mode_t)operationMode
+{
+    __block uint32_t currentMode;
+    
+    dispatch_sync(cameraDispatchQueue, ^{
+        dc1394_video_get_operation_mode(_camera, &currentMode);
+    });
+    
+    return currentMode;
 }
 
 // This must be done differently -JKC

@@ -64,7 +64,7 @@ extern NSString *const GPUImageCameraErrorDomain;
 // libdc1394 properties
 // Need to figure out if these should be readwrite, readonly, nonatomic, etc... -JKC
 @property(readwrite) dc1394framerate_t fps;
-@property(readonly) dc1394video_mode_t res;
+@property(readwrite) dc1394video_mode_t res;
 @property(readonly) dc1394video_modes_t supportedVideoModes;
 @property(readwrite) dc1394speed_t filmSpeed;
 @property(readwrite) dc1394camera_t *camera;
