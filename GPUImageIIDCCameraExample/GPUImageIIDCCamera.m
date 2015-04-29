@@ -9,17 +9,6 @@
 
 #define LOOPSWITHOUTFRAMEBEFOREERROR 30
 
-const char* Video_Mode_Strings[] = {"DC1394_VIDEO_MODE_160x120_YUV444", "DC1394_VIDEO_MODE_320x240_YUV422", "DC1394_VIDEO_MODE_640x480_YUV411",
-                                    "DC1394_VIDEO_MODE_640x480_YUV422", "DC1394_VIDEO_MODE_640x480_RGB8", "DC1394_VIDEO_MODE_640x480_MONO8",
-                                    "DC1394_VIDEO_MODE_640x480_MONO16", "DC1394_VIDEO_MODE_800x600_YUV422", "DC1394_VIDEO_MODE_800x600_RGB8",
-                                    "DC1394_VIDEO_MODE_800x600_MONO8", "DC1394_VIDEO_MODE_1024x768_YUV422", "DC1394_VIDEO_MODE_1024x768_RGB8",
-                                    "DC1394_VIDEO_MODE_1024x768_MONO8", "DC1394_VIDEO_MODE_800x600_MONO16", "DC1394_VIDEO_MODE_1024x768_MONO16",
-                                    "DC1394_VIDEO_MODE_1280x960_YUV422", "DC1394_VIDEO_MODE_1280x960_RGB8", "DC1394_VIDEO_MODE_1280x960_MONO8",
-                                    "DC1394_VIDEO_MODE_1600x1200_YUV422", "DC1394_VIDEO_MODE_1600x1200_RGB8", "DC1394_VIDEO_MODE_1600x1200_MONO8",
-                                    "DC1394_VIDEO_MODE_1280x960_MONO16", "DC1394_VIDEO_MODE_1600x1200_MONO16", "DC1394_VIDEO_MODE_EXIF",
-                                    "DC1394_VIDEO_MODE_FORMAT7_0", "DC1394_VIDEO_MODE_FORMAT7_1", "DC1394_VIDEO_MODE_FORMAT7_2",
-                                    "DC1394_VIDEO_MODE_FORMAT7_3", "DC1394_VIDEO_MODE_FORMAT7_4", "DC1394_VIDEO_MODE_FORMAT7_5",
-                                    "DC1394_VIDEO_MODE_FORMAT7_6", "DC1394_VIDEO_MODE_FORMAT7_7"};
 
 #pragma mark -
 #pragma mark Frame grabbing
@@ -240,11 +229,16 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     }
     else
     {
+        // Set the video mode
         dc1394_video_set_mode(_camera, mode);
+        
         modeSet = YES;
         return modeSet;
     }
 }
+
+// Method to set frame size. If the mode isn't Format 7, then use the hardcoded frame size. If it is, then set it.
+// Do I need to send the frame size in as a parameter if it isn't needed for non-Format 7?? Hmmm...
 
 - (BOOL)videoModeIsSupported:(dc1394video_mode_t)mode;
 {
@@ -255,11 +249,11 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     {
         NSLog(@"Current Video Mode: %u", _supportedVideoModes.modes[currentVideoMode]);
         // The enum containing the modes starts at an index of 64, so to output the appropriate string you need to subtract 64 from the current index. -JKC
-        NSLog(@"Current Video Mode: %s", Video_Mode_Strings[_supportedVideoModes.modes[currentVideoMode] - 64]);
-        
+        NSLog(@"Current Video Mode: %@", [self stringForMode:_supportedVideoModes.modes[currentVideoMode]]);
         if (_supportedVideoModes.modes[currentVideoMode] == mode)
         {
             modeFound = YES;
+            break;
         }
     }
     
@@ -344,10 +338,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data)
 #pragma mark -
 #pragma mark Settings
 
-// Do the camera setup for things like frame rate and size
-// Deal with large enum of video formats
-// Deal with the possibility of Format 7
-
 - (BOOL)readAllSettingLimits:(NSError **)error;
 {
     if(dc1394_feature_get_all(_camera, &features) != DC1394_SUCCESS)
@@ -417,8 +407,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data)
 /*
 #pragma mark -
 #pragma mark Frame grabbing
-// Where does this get called?? In the original code, it's part of the OpenGL pipeline. -JKC
-// This is where you would update settings inside the asychronous dispatch queue, except I have it on the controller class... D'oh! -JKC
 - (BOOL)grabNewVideoFrame:(NSError **)error;
 {
     int err = 0;
@@ -557,6 +545,115 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data)
 {
     // This is a placeholder, in case we need error handling of different types for the camera
     return YES;
+}
+
+
+#pragma mark -
+#pragma mark Debugging methods
+- (NSString*)stringForMode:(uint32_t)mode;
+{
+    
+    switch (mode) {
+        case 64:
+            return @"DC1394_VIDEO_MODE_160x120_YUV444";
+            
+        case 65:
+            return @"DC1394_VIDEO_MODE_320x240_YUV422";
+            
+        case 66:
+            return @"DC1394_VIDEO_MODE_640x480_YUV411";
+            
+        case 67:
+            return @"DC1394_VIDEO_MODE_640x480_YUV422";
+            
+        case 68:
+            return @"DC1394_VIDEO_MODE_640x480_RGB8";
+            
+        case 69:
+            return @"DC1394_VIDEO_MODE_640x480_MONO8";
+            
+        case 70:
+            return @"DC1394_VIDEO_MODE_640x480_MONO16";
+            
+        case 71:
+            return @"DC1394_VIDEO_MODE_800x600_YUV422";
+            
+        case 72:
+            return @"DC1394_VIDEO_MODE_800x600_RGB8";
+            
+        case 73:
+            return @"DC1394_VIDEO_MODE_800x600_MONO8";
+            
+        case 74:
+            return @"DC1394_VIDEO_MODE_1024x768_YUV422";
+            
+        case 75:
+            return @"DC1394_VIDEO_MODE_1024x768_RGB8";
+            
+        case 76:
+            return @"DC1394_VIDEO_MODE_1024x768_MONO8";
+            
+        case 77:
+            return @"DC1394_VIDEO_MODE_800x600_MONO16";
+            
+        case 78:
+            return @"DC1394_VIDEO_MODE_1024x768_MONO16";
+            
+        case 79:
+            return @"DC1394_VIDEO_MODE_1280x960_YUV422";
+            
+        case 80:
+            return @"DC1394_VIDEO_MODE_1280x960_RGB8";
+            
+        case 81:
+            return @"DC1394_VIDEO_MODE_1280x960_MONO8";
+            
+        case 82:
+            return @"DC1394_VIDEO_MODE_1600x1200_YUV422";
+            
+        case 83:
+            return @"DC1394_VIDEO_MODE_1600x1200_RGB8";
+            
+        case 84:
+            return @"DC1394_VIDEO_MODE_1600x1200_MONO8";
+            
+        case 85:
+            return @"DC1394_VIDEO_MODE_1280x960_MONO16";
+            
+        case 86:
+            return @"DC1394_VIDEO_MODE_1600x1200_MONO16";
+            
+        case 87:
+            return @"DC1394_VIDEO_MODE_EXIF";
+            
+        case 88:
+            return @"DC1394_VIDEO_MODE_FORMAT7_0";
+            
+        case 89:
+            return @"DC1394_VIDEO_MODE_FORMAT7_1";
+            
+        case 90:
+            return @"DC1394_VIDEO_MODE_FORMAT7_2";
+            
+        case 91:
+            return @"DC1394_VIDEO_MODE_FORMAT7_3";
+            
+        case 92:
+            return @"DC1394_VIDEO_MODE_FORMAT7_4";
+            
+        case 93:
+            return @"DC1394_VIDEO_MODE_FORMAT7_5";
+            
+        case 94:
+            return @"DC1394_VIDEO_MODE_FORMAT7_6";
+            
+        case 95:
+            return @"DC1394_VIDEO_MODE_FORMAT7_7";
+            
+        default:
+            return @"Mode Not Found";
+    }
+    
 }
 
 #pragma mark -
@@ -727,5 +824,154 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void * data)
     return whiteBalanceV;
 }
 
+
+- (void)setFps:(dc1394framerate_t)newValue
+{
+    dispatch_async(cameraDispatchQueue, ^{
+        dc1394_video_set_framerate(_camera, newValue);
+    });
+}
+
+- (dc1394framerate_t)fps
+{
+    __block dc1394framerate_t currentRate;
+    
+    dispatch_sync(cameraDispatchQueue, ^{
+        dc1394_video_get_framerate(_camera, &currentRate);
+    });
+    
+    return currentRate;
+}
+
+- (void)setFilmSpeed:(dc1394speed_t)newValue
+{
+    dispatch_async(cameraDispatchQueue, ^{
+        dc1394_video_set_iso_speed(_camera, newValue);
+    });
+}
+
+- (dc1394speed_t)filmSpeed
+{
+    __block dc1394speed_t currentSpeed;
+    
+    dispatch_sync(cameraDispatchQueue, ^{
+        dc1394_video_get_iso_speed(_camera, &currentSpeed);
+    });
+    
+    return currentSpeed;
+}
+
+// Do the camera setup for things like frame rate and size
+// Deal with large enum of video formats
+// Deal with the possibility of Format 7
+- (void)setFrameSize:(CGSize)newSize
+{
+    // Looking at the headers, the frame size is part of a struct associated with the frame. In the old code, the frame is instantiated
+    // when we try to capture a frame. Should I just not override the frame size and deal with this stuff in the capture frame code? -JKC
+    if (_res >= 88) {
+        // If mode is Format 7, set the frame size directly
+        self.frameSize = newSize;
+    } else {
+        // If not, use the built in frame size; Is part of the format description.
+        // Do a giant switch statement here??
+        switch (self.res) {
+            case DC1394_VIDEO_MODE_160x120_YUV444:
+                self.frameSize = CGSizeMake(160, 120);
+                break;
+                
+            case DC1394_VIDEO_MODE_320x240_YUV422:
+                self.frameSize = CGSizeMake(320, 240);
+                break;
+                
+            case DC1394_VIDEO_MODE_640x480_YUV411:
+                self.frameSize = CGSizeMake(640, 480);
+                break;
+                
+            case DC1394_VIDEO_MODE_640x480_YUV422:
+                self.frameSize = CGSizeMake(640, 480);
+                break;
+                
+            case DC1394_VIDEO_MODE_640x480_RGB8:
+                self.frameSize = CGSizeMake(640, 480);
+                break;
+                
+            case DC1394_VIDEO_MODE_640x480_MONO8:
+                self.frameSize = CGSizeMake(640, 480);
+                break;
+                
+            case DC1394_VIDEO_MODE_640x480_MONO16:
+                self.frameSize = CGSizeMake(640, 480);
+                break;
+                
+            case DC1394_VIDEO_MODE_800x600_YUV422:
+                self.frameSize = CGSizeMake(800, 600);
+                break;
+                
+            case DC1394_VIDEO_MODE_800x600_RGB8:
+                self.frameSize = CGSizeMake(800, 600);
+                break;
+                
+            case DC1394_VIDEO_MODE_800x600_MONO8:
+                self.frameSize = CGSizeMake(800, 600);
+                break;
+                
+            case DC1394_VIDEO_MODE_1024x768_YUV422:
+                self.frameSize = CGSizeMake(1024, 768);
+                break;
+                
+            case DC1394_VIDEO_MODE_1024x768_RGB8:
+                self.frameSize = CGSizeMake(1024, 768);
+                break;
+                
+            case DC1394_VIDEO_MODE_1024x768_MONO8:
+                self.frameSize = CGSizeMake(1024, 768);
+                break;
+                
+            case DC1394_VIDEO_MODE_800x600_MONO16:
+                self.frameSize = CGSizeMake(800, 600);
+                break;
+                
+            case DC1394_VIDEO_MODE_1024x768_MONO16:
+                self.frameSize = CGSizeMake(1024, 768);
+                break;
+                
+            case DC1394_VIDEO_MODE_1280x960_YUV422:
+                self.frameSize = CGSizeMake(1280, 960);
+                break;
+                
+            case DC1394_VIDEO_MODE_1280x960_RGB8:
+                self.frameSize = CGSizeMake(1280, 960);
+                break;
+                
+            case DC1394_VIDEO_MODE_1280x960_MONO8:
+                self.frameSize = CGSizeMake(1280, 960);
+                break;
+                
+            case DC1394_VIDEO_MODE_1600x1200_YUV422:
+                self.frameSize = CGSizeMake(1600, 1200);
+                break;
+                
+            case DC1394_VIDEO_MODE_1600x1200_RGB8:
+                self.frameSize = CGSizeMake(1600, 1200);
+                break;
+                
+            case DC1394_VIDEO_MODE_1600x1200_MONO8:
+                self.frameSize = CGSizeMake(1600, 1200);
+                break;
+                
+            case DC1394_VIDEO_MODE_1280x960_MONO16:
+                self.frameSize = CGSizeMake(1280, 960);
+                break;
+                
+            case DC1394_VIDEO_MODE_1600x1200_MONO16:
+                self.frameSize = CGSizeMake(1600, 1200);
+                break;
+                
+            default:
+                // This is where the unhandled case DC1394_VIDEO_MODE_EXIF would fall. -JKC
+                break;
+        }
+    }
+}
 
 @end

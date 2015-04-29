@@ -13,10 +13,12 @@
     // Default GPUImage stuff to be replaced by the IIDC Camera stuff. -JKC
 //    [self runGPUImageCameraCode];
     [self setupCameraCode];
+    BOOL modeSet = [iidcCamera setVideoMode:DC1394_VIDEO_MODE_FORMAT7_0];
+    NSLog(@"Video Mode set correctly? %i", modeSet);
     
     NSError *error;
     [iidcCamera readAllSettingLimits:&error];
-    [self cameraSettingsTests];
+//    [self cameraSettingsTests];
 }
 
 #pragma MARK - GPUImageIIDCCamera Code

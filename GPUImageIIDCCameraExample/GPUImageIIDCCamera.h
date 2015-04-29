@@ -84,6 +84,9 @@ extern NSString *const GPUImageCameraErrorDomain;
 // Error handling methods
 - (NSError *)errorForCameraDisconnection;
 
+// Debugging methods
+- (NSString*)stringForMode:(uint32_t)mode;
+
 @end
 
 
