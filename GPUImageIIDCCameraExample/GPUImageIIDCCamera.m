@@ -299,6 +299,23 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     dc1394_capture_stop(_camera);
 }
 
+- (BOOL)setVideoMode:(dc1394video_mode_t)mode;
+{
+    BOOL modeSet = NO;
+    
+    if (![self videoModeIsSupported:mode]) {
+        return modeSet;
+    }
+    else
+    {
+        // Set the video mode
+        dc1394_video_set_mode(_camera, mode);
+        
+        modeSet = YES;
+        return modeSet;
+    }
+}
+
 - (BOOL)videoModeIsSupported:(dc1394video_mode_t)mode;
 {
     unsigned int currentVideoMode;
