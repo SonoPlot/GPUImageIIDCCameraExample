@@ -32,15 +32,15 @@
     [iidcCamera connectToCamera:&error];
     
     // Check to see if the video mode is supported
-    BOOL cameraFound = [iidcCamera videoModeIsSupported:DC1394_VIDEO_MODE_FORMAT7_0];
+    BOOL cameraFound = [iidcCamera supportsVideoMode:DC1394_VIDEO_MODE_FORMAT7_0];
     
     // If it is, then set up the camera
     if (cameraFound) {
         // The Frame Size setter is dependent upon the video mode format, so that must come first. -JKC
         iidcCamera.videoMode = DC1394_VIDEO_MODE_FORMAT7_0;
-        iidcCamera.frameSize = CGSizeMake(644, 482);
+        iidcCamera.regionOfInterest = CGRectMake(322, 241, 644.0, 482.0);
         iidcCamera.operationMode = DC1394_OPERATION_MODE_1394B;
-        iidcCamera.filmSpeed = DC1394_ISO_SPEED_800;
+        iidcCamera.isoSpeed = DC1394_ISO_SPEED_800;
     } else {
         NSLog(@"Video mode was not supported and camera could not be set up.");
     }

@@ -60,7 +60,7 @@ extern NSString *const GPUImageCameraErrorDomain;
 @property(readwrite, nonatomic) BOOL runBenchmark;
 
 @property(readwrite, nonatomic) CGFloat luminanceSetPoint;
-@property(readwrite, nonatomic) CGSize frameSize;
+@property(readonly) CGSize frameSize;
 
 // libdc1394 properties
 // Need to figure out if these should be readwrite, readonly, nonatomic, etc... -JKC
@@ -75,6 +75,7 @@ extern NSString *const GPUImageCameraErrorDomain;
 // Settings
 @property(readwrite, nonatomic) NSInteger brightnessMin, brightnessMax, exposureMin, exposureMax, sharpnessMin, sharpnessMax, whiteBalanceMin, whiteBalanceMax, saturationMin, saturationMax, gammaMin, gammaMax, shutterMin, shutterMax, gainMin, gainMax;
 @property(readwrite, nonatomic) NSInteger brightness, exposure, whiteBalanceU, whiteBalanceV, sharpness, saturation, gamma, shutter, gain;
+@property(readwrite, nonatomic) CGRect regionOfInterest;
 
 - (void)setWhiteBalance:(uint32_t)newWhiteBalanceU whiteBalanceV:(uint32_t)newWhiteBalanceV;
 
