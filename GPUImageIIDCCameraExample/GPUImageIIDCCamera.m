@@ -272,9 +272,6 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 
 - (void)startCameraCapture;
 {
-    // TODO: Figure out better way of allocating upload texture memory due to size changes
-    [self initializeUploadTextureForSize:_frameSize];
-    
     frameGrabTimedOutOnce = NO;
     sequentialMissedCameraFrames = 0;
 
@@ -632,6 +629,18 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     }
 }
 
+- (void)checkBufferMemory
+{
+    // Checking to see if the buffer memory is null. If not, we release it and bind it. If it is null, we simply bind it.
+    if (frameMemory != NULL) {
+        [self deallocateUploadTexture];
+        [self initializeUploadTextureForSize:_frameSize];
+    } else {
+        [self initializeUploadTextureForSize:_frameSize];
+    }
+    
+}
+
 #pragma mark -
 #pragma mark External device control
 
@@ -702,24 +711,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
         self.saturationMax = newSaturationMax;
         self.gammaMin = newGammaMin;
         self.gammaMax = newGammaMax;
-        
-        /*
-        NSLog(@"newGainMin: %u", newGainMin);
-        NSLog(@"newGainMax: %u", newGainMax);
-        NSLog(@"newBrightnessMin: %u", newBrightnessMin);
-        NSLog(@"newBrightnessMax: %u", newBrightnessMax);
-        NSLog(@"newExposureMin: %u", newExposureMin);
-        NSLog(@"newExposureMax: %u", newExposureMax);
-        
-        NSLog(@"newSharpnessMin: %u", newSharpnessMin);
-        NSLog(@"newSharpnessMax: %u", newSharpnessMax);
-        NSLog(@"newWhiteBalanceMin: %u", newWhiteBalanceMin);
-        NSLog(@"newWhiteBalanceMax: %u", newWhiteBalanceMax);
-        NSLog(@"newSaturationMin: %u", newSaturationMin);
-        NSLog(@"newSaturationMax: %u", newSaturationMax);
-        NSLog(@"newGammaMin: %u", newGammaMin);
-        NSLog(@"newGammaMax: %u", newGammaMax);
-        */
     }	
     
     return YES;
@@ -1016,9 +1007,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     return currentMode;
 }
 
-// Do we need another method that takes a frame size?
-// I know that we need to set the size if it is format 7, which should be done here, I think, but do we pass in a frame size if
-// the format isn't format 7??
 - (void)setVideoMode:(dc1394video_mode_t)newMode;
 {
     if (![self supportsVideoMode:newMode]) {
@@ -1031,56 +1019,58 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
         
         if (self.videoMode < 88) {
             
-        switch (self.videoMode) {
-            case DC1394_VIDEO_MODE_160x120_YUV444:
-                self.frameSize = CGSizeMake(160, 120);
-                break;
+            switch (self.videoMode) {
+                case DC1394_VIDEO_MODE_160x120_YUV444:
+                    self.frameSize = CGSizeMake(160, 120);
+                    break;
                     
-            case DC1394_VIDEO_MODE_320x240_YUV422:
-                self.frameSize = CGSizeMake(320, 240);
-                break;
+                case DC1394_VIDEO_MODE_320x240_YUV422:
+                    self.frameSize = CGSizeMake(320, 240);
+                    break;
                     
-            case DC1394_VIDEO_MODE_640x480_YUV411:
-            case DC1394_VIDEO_MODE_640x480_YUV422:
-            case DC1394_VIDEO_MODE_640x480_RGB8:
-            case DC1394_VIDEO_MODE_640x480_MONO8:
-            case DC1394_VIDEO_MODE_640x480_MONO16:
-                self.frameSize = CGSizeMake(640, 480);
-                break;
+                case DC1394_VIDEO_MODE_640x480_YUV411:
+                case DC1394_VIDEO_MODE_640x480_YUV422:
+                case DC1394_VIDEO_MODE_640x480_RGB8:
+                case DC1394_VIDEO_MODE_640x480_MONO8:
+                case DC1394_VIDEO_MODE_640x480_MONO16:
+                    self.frameSize = CGSizeMake(640, 480);
+                    break;
                     
-            case DC1394_VIDEO_MODE_800x600_YUV422:
-            case DC1394_VIDEO_MODE_800x600_RGB8:
-            case DC1394_VIDEO_MODE_800x600_MONO8:
-            case DC1394_VIDEO_MODE_800x600_MONO16:
-                self.frameSize = CGSizeMake(800, 600);
-                break;
+                case DC1394_VIDEO_MODE_800x600_YUV422:
+                case DC1394_VIDEO_MODE_800x600_RGB8:
+                case DC1394_VIDEO_MODE_800x600_MONO8:
+                case DC1394_VIDEO_MODE_800x600_MONO16:
+                    self.frameSize = CGSizeMake(800, 600);
+                    break;
                     
-            case DC1394_VIDEO_MODE_1024x768_YUV422:
-            case DC1394_VIDEO_MODE_1024x768_RGB8:
-            case DC1394_VIDEO_MODE_1024x768_MONO8:
-            case DC1394_VIDEO_MODE_1024x768_MONO16:
-                self.frameSize = CGSizeMake(1024, 768);
-                break;
+                case DC1394_VIDEO_MODE_1024x768_YUV422:
+                case DC1394_VIDEO_MODE_1024x768_RGB8:
+                case DC1394_VIDEO_MODE_1024x768_MONO8:
+                case DC1394_VIDEO_MODE_1024x768_MONO16:
+                    self.frameSize = CGSizeMake(1024, 768);
+                    break;
                     
-            case DC1394_VIDEO_MODE_1280x960_YUV422:
-            case DC1394_VIDEO_MODE_1280x960_RGB8:
-            case DC1394_VIDEO_MODE_1280x960_MONO8:
-            case DC1394_VIDEO_MODE_1280x960_MONO16:
-                self.frameSize = CGSizeMake(1280, 960);
-                break;
+                case DC1394_VIDEO_MODE_1280x960_YUV422:
+                case DC1394_VIDEO_MODE_1280x960_RGB8:
+                case DC1394_VIDEO_MODE_1280x960_MONO8:
+                case DC1394_VIDEO_MODE_1280x960_MONO16:
+                    self.frameSize = CGSizeMake(1280, 960);
+                    break;
                     
-            case DC1394_VIDEO_MODE_1600x1200_YUV422:
-            case DC1394_VIDEO_MODE_1600x1200_RGB8:
-            case DC1394_VIDEO_MODE_1600x1200_MONO8:
-            case DC1394_VIDEO_MODE_1600x1200_MONO16:
-                self.frameSize = CGSizeMake(1600, 1200);
-                break;
+                case DC1394_VIDEO_MODE_1600x1200_YUV422:
+                case DC1394_VIDEO_MODE_1600x1200_RGB8:
+                case DC1394_VIDEO_MODE_1600x1200_MONO8:
+                case DC1394_VIDEO_MODE_1600x1200_MONO16:
+                    self.frameSize = CGSizeMake(1600, 1200);
+                    break;
                     
-            default:
-                // This is where the unhandled case DC1394_VIDEO_MODE_EXIF would fall. -JKC
-                break;
+                default:
+                    // This is where the unhandled case DC1394_VIDEO_MODE_EXIF would fall. -JKC
+                    break;
             }
         }
+        
+        [self checkBufferMemory];
     }
     
     if (isBlackflyCamera)
@@ -1190,6 +1180,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
             
         } else {
             dc1394_format7_set_image_size(_camera, self.videoMode, newValue.size.width, newValue.size.height);
+            [self checkBufferMemory];
         }
     });
 }
