@@ -33,6 +33,7 @@
     
     // Check to see if the video mode is supported
     BOOL cameraFound = [iidcCamera supportsVideoMode:DC1394_VIDEO_MODE_FORMAT7_0];
+    NSLog(@"Camera Found: %d", cameraFound);
     
     // If it is, then set up the camera
     if (cameraFound) {
