@@ -53,6 +53,9 @@
         iidcCamera.fps = DC1394_FRAMERATE_30;
         iidcCamera.videoMode = DC1394_VIDEO_MODE_640x480_YUV411;
     }
+    
+    [iidcCamera startCameraCapture];
+        
 }
 
 - (void)cameraSettingsTests {
@@ -92,22 +95,6 @@
 }
 
 
-- (IBAction)imageCapture:(id)sender {
-    
-    if (iidcCamera.isCaptureInProgress == NO) {
-        [iidcCamera startCameraCapture];
-        self.imageCaptureButton.title = @"Stop Image Capture";
-        iidcCamera.isCaptureInProgress = YES;
-    } else {
-        [iidcCamera stopCameraCapture];
-        self.imageCaptureButton.title = @"Start Image Capture";
-        iidcCamera.isCaptureInProgress = NO;
-    }
-    
-}
-
-- (IBAction)luminanceSetter:(id)sender {
-}
 
 #pragma MARK - GPUImage Code for Debugging Purposes
 - (void)runGPUImageCameraCode {
