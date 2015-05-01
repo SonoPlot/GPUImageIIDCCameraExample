@@ -45,6 +45,7 @@ NSString *const kGPUImageYUV422ColorspaceConversionFragmentShaderString = SHADER
 }
 
 @property(readwrite, nonatomic) CGSize frameSize;
+@property(readwrite, nonatomic) dc1394color_coding_t colorCode;
 
 // Frame processing and upload
 - (void)processVideoFrame;
@@ -1097,6 +1098,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                         break;
                 }
                 
+                // TODO: Ask Brad where this needs to be used and so forth because right not this goes to a dead end. -JKC
                 switch (self.videoMode) {
                     case DC1394_VIDEO_MODE_160x120_YUV444:
                         self.colorCode = DC1394_COLOR_CODING_YUV444;
@@ -1146,7 +1148,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                 }
                 
             }
-         
+        
     });
     
     if (isBlackflyCamera)
