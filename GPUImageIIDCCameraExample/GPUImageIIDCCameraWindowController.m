@@ -29,24 +29,30 @@
     [filter addTarget:self.videoView];
 
     NSError *error = nil;
-    [iidcCamera connectToCamera:&error];
-    
-    // Check to see if the video mode is supported
-    BOOL cameraFound = [iidcCamera supportsVideoMode:DC1394_VIDEO_MODE_FORMAT7_0];
-    NSLog(@"Camera Found: %d", cameraFound);
-    
-    // If it is, then set up the camera
-    if (cameraFound) {
-        // The Frame Size setter is dependent upon the video mode format, so that must come first. -JKC
-        iidcCamera.videoMode = DC1394_VIDEO_MODE_FORMAT7_0;
-        iidcCamera.regionOfInterest = CGRectMake(322, 241, 644.0, 482.0);
-        iidcCamera.operationMode = DC1394_OPERATION_MODE_1394B;
-        iidcCamera.isoSpeed = DC1394_ISO_SPEED_800;
-        [iidcCamera turnOnLEDLight];
-    } else {
-        NSLog(@"Video mode was not supported and camera could not be set up.");
+    if (![iidcCamera connectToCamera:&error])
+    {
+        NSLog(@"Error in connecting to the camera");
+        return;
     }
     
+    // The Frame Size setter is dependent upon the video mode format, so that must come first. -JKC
+    if ([iidcCamera supportsVideoMode:DC1394_VIDEO_MODE_FORMAT7_0])
+    {
+        // Point Grey Flea2 or Blackfly cameras
+        iidcCamera.operationMode = DC1394_OPERATION_MODE_1394B;
+        iidcCamera.isoSpeed = DC1394_ISO_SPEED_800;
+        iidcCamera.videoMode = DC1394_VIDEO_MODE_FORMAT7_0;
+        iidcCamera.regionOfInterest = CGRectMake(320, 240, 640.0, 480.0);
+        [iidcCamera turnOnLEDLight];
+    }
+    else
+    {
+        // Unibrain Fire-I test camera
+        iidcCamera.operationMode = DC1394_OPERATION_MODE_LEGACY;
+        iidcCamera.isoSpeed = DC1394_ISO_SPEED_400;
+        iidcCamera.fps = DC1394_FRAMERATE_30;
+        iidcCamera.videoMode = DC1394_VIDEO_MODE_640x480_YUV411;
+    }
 }
 
 - (void)cameraSettingsTests {

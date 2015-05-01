@@ -183,8 +183,6 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 #pragma mark Camera interface
 - (BOOL)connectToCamera:(NSError **)error;
 {
-    dc1394speed_t speed;
-    
     dc1394camera_list_t * list;
     
     dc1394_log_register_handler(DC1394_LOG_WARNING, NULL, NULL);
@@ -239,16 +237,6 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     // Turn camera on
     dc1394_camera_set_power(_camera,DC1394_ON);
     
-    if (dc1394_video_get_iso_speed(_camera, &speed) != DC1394_SUCCESS)
-    {
-        NSLog(@"Camera: Error in getting ISO speed");
-        if (error != NULL)
-        {
-            *error = [self errorForCameraDisconnection];
-        }
-        return NO;
-    }
-    
     if (![self readAllSettingLimits:error])
     {
         return NO;	
@@ -261,7 +249,6 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     
     if ([self supportsVideoMode:DC1394_VIDEO_MODE_FORMAT7_0] && ![self supportsVideoMode:DC1394_VIDEO_MODE_1280x960_YUV422])
     {
-        NSLog(@"Blackfly camera detected");
         isBlackflyCamera = YES;
     }
     
@@ -299,7 +286,6 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 
 - (BOOL)supportsVideoMode:(dc1394video_mode_t)mode;
 {
-    NSLog(@"Supports Video Mode Called");
     unsigned int currentVideoMode;
     BOOL modeFound = NO;
     
@@ -308,7 +294,6 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
         if (_supportedVideoModes.modes[currentVideoMode] == mode)
         {
             modeFound = YES;
-            NSLog(@"Video Mode was found");
             break;
         }
     }
@@ -700,46 +685,55 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 
 - (BOOL)readAllSettingLimits:(NSError **)error;
 {
-    if(dc1394_feature_get_all(_camera, &features) != DC1394_SUCCESS)
+    __block NSError *localError = nil;
+    dispatch_sync(cameraDispatchQueue, ^{
+        if(dc1394_feature_get_all(_camera, &features) != DC1394_SUCCESS)
+        {
+            NSLog(@"Failed on reading limits");
+            localError = [self errorForCameraDisconnection];
+            return;
+        }
+        else
+        {
+            uint32_t newBrightnessMin, newBrightnessMax, newExposureMin, newExposureMax, newSharpnessMin, newSharpnessMax, newWhiteBalanceMin, newWhiteBalanceMax, newSaturationMin, newSaturationMax, newGammaMin, newGammaMax, newShutterMin, newShutterMax, newGainMin, newGainMax;
+            dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_BRIGHTNESS, &newBrightnessMin, &newBrightnessMax);
+            dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_EXPOSURE, &newExposureMin, &newExposureMax);
+            dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_SHARPNESS, &newSharpnessMin, &newSharpnessMax);
+            dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_WHITE_BALANCE, &newWhiteBalanceMin, &newWhiteBalanceMax);
+            dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_SATURATION, &newSaturationMin, &newSaturationMax);
+            dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_GAMMA, &newGammaMin, &newGammaMax);
+            dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_SHUTTER, &newShutterMin, &newShutterMax);
+            dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_GAIN, &newGainMin, &newGainMax);
+            
+            // Settings that were specialized in the previous code. -JKC
+            self.gainMin = newGainMin;
+            self.gainMax = newGainMax;
+            self.brightnessMin = newBrightnessMin;
+            self.brightnessMax = newBrightnessMax;
+            self.exposureMin = newExposureMin;
+            self.exposureMax = newExposureMax;
+            
+            // Settings that were generic to each camera used. -JKC
+            self.sharpnessMin = newSharpnessMin;
+            self.sharpnessMax = newSharpnessMax;
+            self.whiteBalanceMin = newWhiteBalanceMin;
+            self.whiteBalanceMax = newWhiteBalanceMax;
+            self.saturationMin = newSaturationMin;
+            self.saturationMax = newSaturationMax;
+            self.gammaMin = newGammaMin;
+            self.gammaMax = newGammaMax;
+        }
+    });
+    
+    if (localError != nil)
     {
-        NSLog(@"Failed on reading limits");
         if (error != NULL)
         {
-            *error = [self errorForCameraDisconnection];
+            *error = localError;
         }
         return NO;
     }
-    else
-    {
-        uint32_t newBrightnessMin, newBrightnessMax, newExposureMin, newExposureMax, newSharpnessMin, newSharpnessMax, newWhiteBalanceMin, newWhiteBalanceMax, newSaturationMin, newSaturationMax, newGammaMin, newGammaMax, newShutterMin, newShutterMax, newGainMin, newGainMax;
-        dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_BRIGHTNESS, &newBrightnessMin, &newBrightnessMax);
-        dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_EXPOSURE, &newExposureMin, &newExposureMax);
-        dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_SHARPNESS, &newSharpnessMin, &newSharpnessMax);
-        dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_WHITE_BALANCE, &newWhiteBalanceMin, &newWhiteBalanceMax);
-        dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_SATURATION, &newSaturationMin, &newSaturationMax);
-        dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_GAMMA, &newGammaMin, &newGammaMax);
-        dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_SHUTTER, &newShutterMin, &newShutterMax);
-        dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_GAIN, &newGainMin, &newGainMax);
-        
-        // Settings that were specialized in the previous code. -JKC
-        self.gainMin = newGainMin;
-        self.gainMax = newGainMax;
-        self.brightnessMin = newBrightnessMin;
-        self.brightnessMax = newBrightnessMax;
-        self.exposureMin = newExposureMin;
-        self.exposureMax = newExposureMax;
-        
-        // Settings that were generic to each camera used. -JKC
-        self.sharpnessMin = newSharpnessMin;
-        self.sharpnessMax = newSharpnessMax;
-        self.whiteBalanceMin = newWhiteBalanceMin;
-        self.whiteBalanceMax = newWhiteBalanceMax;
-        self.saturationMin = newSaturationMin;
-        self.saturationMax = newSaturationMax;
-        self.gammaMin = newGammaMin;
-        self.gammaMax = newGammaMax;
-    }	
-    
+
     return YES;
 }
 
@@ -1041,9 +1035,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
         return;
     }
     dispatch_async(cameraDispatchQueue, ^{
-        NSLog(@"Set Video Mode Called");
-        NSLog(@"New Mode in setVideoMode: %i", newMode);
-
         dc1394_video_set_mode(_camera, newMode);
             
             if (newMode < 88) {
@@ -1169,7 +1160,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     
     dispatch_async(cameraDispatchQueue, ^{
         dc1394_video_get_mode(_camera, &currentMode);
-        NSLog(@"current video mode: %i", currentMode);
     });
     
     return currentMode;
@@ -1246,7 +1236,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 
 - (void)setRegionOfInterest:(CGRect)newValue
 {
-    NSLog(@"Video Mode being sent to set the image size: %i", self.videoMode);
     if (self.videoMode > 87)
     {
         // Throw an exception because it is not Format 7
@@ -1271,8 +1260,8 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
             dc1394_format7_set_roi(_camera, DC1394_VIDEO_MODE_FORMAT7_0,
                                          DC1394_COLOR_CODING_YUV422,
                                          bpp, // use recommended packet size
-                                         newValue.origin.x, newValue.origin.y, // left, top
-                                         newValue.size.width, newValue.size.height);
+                                         (int32_t)round(newValue.origin.x), (int32_t)round(newValue.origin.y), // left, top
+                                         (int32_t)round(newValue.size.width), (int32_t)round(newValue.size.height));
             self.frameSize = newValue.size;
         }
         
