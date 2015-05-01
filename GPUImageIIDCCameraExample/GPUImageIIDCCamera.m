@@ -1146,56 +1146,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                 }
                 
             }
-            
-            switch (self.videoMode) {
-                case DC1394_VIDEO_MODE_160x120_YUV444:
-                    self.frameSize = CGSizeMake(160, 120);
-                    break;
-                    
-                case DC1394_VIDEO_MODE_320x240_YUV422:
-                    self.frameSize = CGSizeMake(320, 240);
-                    break;
-                    
-                case DC1394_VIDEO_MODE_640x480_YUV411:
-                case DC1394_VIDEO_MODE_640x480_YUV422:
-                case DC1394_VIDEO_MODE_640x480_RGB8:
-                case DC1394_VIDEO_MODE_640x480_MONO8:
-                case DC1394_VIDEO_MODE_640x480_MONO16:
-                    self.frameSize = CGSizeMake(640, 480);
-                    break;
-                    
-                case DC1394_VIDEO_MODE_800x600_YUV422:
-                case DC1394_VIDEO_MODE_800x600_RGB8:
-                case DC1394_VIDEO_MODE_800x600_MONO8:
-                case DC1394_VIDEO_MODE_800x600_MONO16:
-                    self.frameSize = CGSizeMake(800, 600);
-                    break;
-                    
-                case DC1394_VIDEO_MODE_1024x768_YUV422:
-                case DC1394_VIDEO_MODE_1024x768_RGB8:
-                case DC1394_VIDEO_MODE_1024x768_MONO8:
-                case DC1394_VIDEO_MODE_1024x768_MONO16:
-                    self.frameSize = CGSizeMake(1024, 768);
-                    break;
-                    
-                case DC1394_VIDEO_MODE_1280x960_YUV422:
-                case DC1394_VIDEO_MODE_1280x960_RGB8:
-                case DC1394_VIDEO_MODE_1280x960_MONO8:
-                case DC1394_VIDEO_MODE_1280x960_MONO16:
-                    self.frameSize = CGSizeMake(1280, 960);
-                    break;
-                    
-                case DC1394_VIDEO_MODE_1600x1200_YUV422:
-                case DC1394_VIDEO_MODE_1600x1200_RGB8:
-                case DC1394_VIDEO_MODE_1600x1200_MONO8:
-                case DC1394_VIDEO_MODE_1600x1200_MONO16:
-                    self.frameSize = CGSizeMake(1600, 1200);
-                    break;
-                    
-                default:
-                    // This is where the unhandled case DC1394_VIDEO_MODE_EXIF would fall. -JKC
-                    break;
-            }
         }
     });
     
