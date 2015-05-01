@@ -67,7 +67,7 @@ extern NSString *const GPUImageCameraErrorDomain;
 @property(readwrite) dc1394framerate_t framerate;
 @property(readwrite) dc1394video_mode_t videoMode;
 @property(readonly) dc1394video_modes_t supportedVideoModes;
-@property(readonly) dc1394color_coding_t colorspace;
+@property(readwrite, nonatomic) dc1394color_coding_t colorspace;
 @property(readwrite) dc1394speed_t isoSpeed;
 @property(readwrite) dc1394camera_t *camera;
 @property(readwrite) dc1394operation_mode_t operationMode;

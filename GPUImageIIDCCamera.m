@@ -45,7 +45,6 @@ NSString *const kGPUImageYUV422ColorspaceConversionFragmentShaderString = SHADER
 }
 
 @property(readwrite, nonatomic) CGSize frameSize;
-@property(readwrite, nonatomic) dc1394color_coding_t colorspace;
 
 // Frame processing and upload
 - (void)processVideoFrame;
@@ -405,7 +404,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
         }
         
 
-        
+
         if (self.colorspace == DC1394_COLOR_CODING_YUV422)
         {
             yuv422_2vuy422(frame->image, frameMemory, (unsigned int)_frameSize.width, (unsigned int)_frameSize.height);
@@ -1036,10 +1035,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 
 - (void)setVideoMode:(dc1394video_mode_t)newMode;
 {
-    if (![self supportsVideoMode:newMode]) {
-        NSLog(@"video mode was not supported");
-        return;
-    }
     dispatch_async(cameraDispatchQueue, ^{
         dc1394_video_set_mode(_camera, newMode);
             
@@ -1098,7 +1093,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                 // TODO: Ask Brad where this needs to be used and so forth because right not this goes to a dead end. -JKC
                 switch (self.videoMode) {
                     case DC1394_VIDEO_MODE_160x120_YUV444:
-                        self.colorspace = DC1394_COLOR_CODING_YUV444;
+                        _colorspace = DC1394_COLOR_CODING_YUV444;
                         break;
                         
                     case DC1394_VIDEO_MODE_320x240_YUV422:
@@ -1107,11 +1102,11 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                     case DC1394_VIDEO_MODE_1024x768_YUV422:
                     case DC1394_VIDEO_MODE_1280x960_YUV422:
                     case DC1394_VIDEO_MODE_1600x1200_YUV422:
-                        self.colorspace = DC1394_COLOR_CODING_YUV422;
+                        _colorspace = DC1394_COLOR_CODING_YUV422;
                         break;
                         
                     case DC1394_VIDEO_MODE_640x480_YUV411:
-                        self.colorspace = DC1394_COLOR_CODING_YUV411;
+                        _colorspace = DC1394_COLOR_CODING_YUV411;
                         break;
                         
                     case DC1394_VIDEO_MODE_640x480_RGB8:
@@ -1119,7 +1114,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                     case DC1394_VIDEO_MODE_1024x768_RGB8:
                     case DC1394_VIDEO_MODE_1280x960_RGB8:
                     case DC1394_VIDEO_MODE_1600x1200_RGB8:
-                        self.colorspace = DC1394_COLOR_CODING_RGB8;
+                        _colorspace = DC1394_COLOR_CODING_RGB8;
                         break;
                         
                     case DC1394_VIDEO_MODE_640x480_MONO8:
@@ -1127,7 +1122,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                     case DC1394_VIDEO_MODE_1024x768_MONO8:
                     case DC1394_VIDEO_MODE_1280x960_MONO8:
                     case DC1394_VIDEO_MODE_1600x1200_MONO8:
-                        self.colorspace = DC1394_COLOR_CODING_MONO8;
+                        _colorspace = DC1394_COLOR_CODING_MONO8;
                         break;
                         
                     case DC1394_VIDEO_MODE_640x480_MONO16:
@@ -1135,7 +1130,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                     case DC1394_VIDEO_MODE_1024x768_MONO16:
                     case DC1394_VIDEO_MODE_1280x960_MONO16:
                     case DC1394_VIDEO_MODE_1600x1200_MONO16:
-                        self.colorspace = DC1394_COLOR_CODING_MONO16;
+                        _colorspace = DC1394_COLOR_CODING_MONO16;
                         break;
                         
                     default:
@@ -1164,7 +1159,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 {
     __block dc1394video_mode_t currentMode;
     
-    dispatch_async(cameraDispatchQueue, ^{
+    dispatch_sync(cameraDispatchQueue, ^{
         dc1394_video_get_mode(_camera, &currentMode);
     });
     
@@ -1241,7 +1236,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 
 - (void)setRegionOfInterest:(CGRect)newValue
 {
-    if (self.videoMode > 87)
+    if (self.videoMode != DC1394_VIDEO_MODE_FORMAT7_0)
     {
         // Throw an exception because it is not Format 7
         NSAssert(false, @"Video Format Is Not Format 7");
@@ -1250,7 +1245,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     dispatch_async(cameraDispatchQueue, ^{
         if (isBlackflyCamera)
         {
-            dc1394_format7_set_color_coding(_camera, DC1394_VIDEO_MODE_FORMAT7_0, DC1394_COLOR_CODING_YUV422);
+            dc1394_format7_set_color_coding(_camera, DC1394_VIDEO_MODE_FORMAT7_0, self.colorspace);
             dc1394_format7_set_image_size(_camera, DC1394_VIDEO_MODE_FORMAT7_0, 644, 482);
             self.frameSize = CGSizeMake(644,482);
         }
@@ -1263,7 +1258,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
             }
 
             dc1394_format7_set_roi(_camera, DC1394_VIDEO_MODE_FORMAT7_0,
-                                         DC1394_COLOR_CODING_YUV422,
+                                         self.colorspace,
                                          bpp, // use recommended packet size
                                          (int32_t)round(newValue.origin.x), (int32_t)round(newValue.origin.y), // left, top
                                          (int32_t)round(newValue.size.width), (int32_t)round(newValue.size.height));
@@ -1296,6 +1291,17 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     } else {
         [self initializeUploadTextureForSize:_frameSize];
     }
+}
+
+- (void)setColorspace:(dc1394color_coding_t)newValue
+{
+    if (self.videoMode != DC1394_VIDEO_MODE_FORMAT7_0)
+    {
+        NSAssert(false, @"Tried to set a colorspace on a non-Format 7 video mode");
+        return;
+    }
+    
+    _colorspace = newValue;
 }
 
 @end

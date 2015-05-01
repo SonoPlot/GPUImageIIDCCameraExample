@@ -42,6 +42,7 @@
         iidcCamera.operationMode = DC1394_OPERATION_MODE_1394B;
         iidcCamera.isoSpeed = DC1394_ISO_SPEED_800;
         iidcCamera.videoMode = DC1394_VIDEO_MODE_FORMAT7_0;
+        iidcCamera.colorspace = DC1394_COLOR_CODING_YUV422;
         iidcCamera.regionOfInterest = CGRectMake(320, 240, 640.0, 480.0);
         [iidcCamera turnOnLEDLight];
     }
