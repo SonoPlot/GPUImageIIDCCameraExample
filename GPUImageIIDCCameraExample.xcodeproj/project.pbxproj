@@ -66,8 +66,8 @@
 		79E62F491ABB21CA00019A4E /* GPUImageIIDCCameraWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPUImageIIDCCameraWindowController.h; sourceTree = "<group>"; };
 		79E62F4A1ABB21CA00019A4E /* GPUImageIIDCCameraWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GPUImageIIDCCameraWindowController.m; sourceTree = "<group>"; };
 		79E62F4B1ABB21CA00019A4E /* GPUImageIIDCCameraWindowController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = GPUImageIIDCCameraWindowController.xib; sourceTree = "<group>"; };
-		79E62F4E1ABB21DF00019A4E /* GPUImageIIDCCamera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GPUImageIIDCCamera.h; path = GPUImageIIDCCameraExample/GPUImageIIDCCamera.h; sourceTree = "<group>"; };
-		79E62F4F1ABB21DF00019A4E /* GPUImageIIDCCamera.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GPUImageIIDCCamera.m; path = GPUImageIIDCCameraExample/GPUImageIIDCCamera.m; sourceTree = "<group>"; };
+		79E62F4E1ABB21DF00019A4E /* GPUImageIIDCCamera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPUImageIIDCCamera.h; sourceTree = "<group>"; };
+		79E62F4F1ABB21DF00019A4E /* GPUImageIIDCCamera.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GPUImageIIDCCamera.m; sourceTree = "<group>"; };
 		79E62F871ABC9B2C00019A4E /* libdc1394.22.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libdc1394.22.dylib; path = Frameworks/libdc1394.22.dylib; sourceTree = "<group>"; };
 		79E62F881ABC9B2C00019A4E /* libusb-1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libusb-1.0.0.dylib"; path = "Frameworks/libusb-1.0.0.dylib"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
