@@ -45,7 +45,7 @@ NSString *const kGPUImageYUV422ColorspaceConversionFragmentShaderString = SHADER
 }
 
 @property(readwrite, nonatomic) CGSize frameSize;
-@property(readwrite, nonatomic) dc1394color_coding_t colorCode;
+@property(readwrite, nonatomic) dc1394color_coding_t colorspace;
 
 // Frame processing and upload
 - (void)processVideoFrame;
@@ -403,17 +403,23 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
             {
             }
         }
-    //    if ((_cameraType == FLEA2G) || (_cameraType == BLACKFLY))
-    //    {
-    //        //				yuv422_2vuy422_old(frame->image, videoTexturePointer, (NSUInteger)frameSize.width, (NSUInteger)frameSize.height, &currentLuminance);
-    //        yuv422_2vuy422(frame->image, _videoTexturePointer, (NSUInteger)_frameSize.width, (NSUInteger)_frameSize.height, &currentLuminance);
-    //    }
-    //    else
-    //    {
-    //        uyvy411_2vuy422(frame->image, _videoTexturePointer, (NSUInteger)_frameSize.width, (NSUInteger)_frameSize.height, &currentLuminance);
-    //    }
         
-        yuv422_2vuy422(frame->image, frameMemory, (unsigned int)_frameSize.width, (unsigned int)_frameSize.height);
+
+        
+        if (self.colorspace == DC1394_COLOR_CODING_YUV422)
+        {
+            yuv422_2vuy422(frame->image, frameMemory, (unsigned int)_frameSize.width, (unsigned int)_frameSize.height);
+        }
+        else if (self.colorspace == DC1394_COLOR_CODING_YUV411)
+        {
+            uyvy411_2vuy422(frame->image, frameMemory, (unsigned int)_frameSize.width, (unsigned int)_frameSize.height);
+        }
+        else
+        {
+            // TODO: Handle RGBA etc...
+        }
+        
+        
         dc1394_capture_enqueue(_camera, frame);
         
         [self processVideoFrame];
@@ -1092,7 +1098,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                 // TODO: Ask Brad where this needs to be used and so forth because right not this goes to a dead end. -JKC
                 switch (self.videoMode) {
                     case DC1394_VIDEO_MODE_160x120_YUV444:
-                        self.colorCode = DC1394_COLOR_CODING_YUV444;
+                        self.colorspace = DC1394_COLOR_CODING_YUV444;
                         break;
                         
                     case DC1394_VIDEO_MODE_320x240_YUV422:
@@ -1101,11 +1107,11 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                     case DC1394_VIDEO_MODE_1024x768_YUV422:
                     case DC1394_VIDEO_MODE_1280x960_YUV422:
                     case DC1394_VIDEO_MODE_1600x1200_YUV422:
-                        self.colorCode = DC1394_COLOR_CODING_YUV422;
+                        self.colorspace = DC1394_COLOR_CODING_YUV422;
                         break;
                         
                     case DC1394_VIDEO_MODE_640x480_YUV411:
-                        self.colorCode = DC1394_COLOR_CODING_YUV411;
+                        self.colorspace = DC1394_COLOR_CODING_YUV411;
                         break;
                         
                     case DC1394_VIDEO_MODE_640x480_RGB8:
@@ -1113,7 +1119,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                     case DC1394_VIDEO_MODE_1024x768_RGB8:
                     case DC1394_VIDEO_MODE_1280x960_RGB8:
                     case DC1394_VIDEO_MODE_1600x1200_RGB8:
-                        self.colorCode = DC1394_COLOR_CODING_RGB8;
+                        self.colorspace = DC1394_COLOR_CODING_RGB8;
                         break;
                         
                     case DC1394_VIDEO_MODE_640x480_MONO8:
@@ -1121,7 +1127,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                     case DC1394_VIDEO_MODE_1024x768_MONO8:
                     case DC1394_VIDEO_MODE_1280x960_MONO8:
                     case DC1394_VIDEO_MODE_1600x1200_MONO8:
-                        self.colorCode = DC1394_COLOR_CODING_MONO8;
+                        self.colorspace = DC1394_COLOR_CODING_MONO8;
                         break;
                         
                     case DC1394_VIDEO_MODE_640x480_MONO16:
@@ -1129,7 +1135,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                     case DC1394_VIDEO_MODE_1024x768_MONO16:
                     case DC1394_VIDEO_MODE_1280x960_MONO16:
                     case DC1394_VIDEO_MODE_1600x1200_MONO16:
-                        self.colorCode = DC1394_COLOR_CODING_MONO16;
+                        self.colorspace = DC1394_COLOR_CODING_MONO16;
                         break;
                         
                     default:

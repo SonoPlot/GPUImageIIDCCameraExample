@@ -106,6 +106,9 @@
     
 }
 
+- (IBAction)luminanceSetter:(id)sender {
+}
+
 #pragma MARK - GPUImage Code for Debugging Purposes
 - (void)runGPUImageCameraCode {
     
