@@ -1146,7 +1146,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                 }
                 
             }
-        }
+         
     });
     
     if (isBlackflyCamera)
