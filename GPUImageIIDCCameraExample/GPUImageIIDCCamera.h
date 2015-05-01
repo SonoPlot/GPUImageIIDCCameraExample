@@ -60,7 +60,7 @@ extern NSString *const GPUImageCameraErrorDomain;
 @property(readwrite, nonatomic) BOOL runBenchmark;
 
 @property(readwrite, nonatomic) CGFloat luminanceSetPoint;
-@property(readonly) CGSize frameSize;
+@property(readonly, nonatomic) CGSize frameSize;
 
 // libdc1394 properties
 // Need to figure out if these should be readwrite, readonly, nonatomic, etc... -JKC
