@@ -44,7 +44,7 @@ NSString *const kGPUImageYUV422ColorspaceConversionFragmentShaderString = SHADER
     unsigned char *frameMemory, *correctedFrameMemory;
 }
 
-@property(readwrite) CGSize frameSize;
+@property(readwrite, nonatomic) CGSize frameSize;
 
 // Frame processing and upload
 - (void)processVideoFrame;
@@ -287,11 +287,13 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 
 - (void)stopCameraCapture;
 {
-    if (dc1394_video_set_transmission(_camera,DC1394_OFF) != DC1394_SUCCESS)
-    {
-        NSLog(@"Error in setting transmission on");
-    }
-    dc1394_capture_stop(_camera);
+    dispatch_async(cameraDispatchQueue, ^{
+        if (dc1394_video_set_transmission(_camera,DC1394_OFF) != DC1394_SUCCESS)
+        {
+            NSLog(@"Error in setting transmission on");
+        }
+        dc1394_capture_stop(_camera);
+    });
 }
 
 - (BOOL)supportsVideoMode:(dc1394video_mode_t)mode;
@@ -363,13 +365,15 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
         
         // There was conditional logic needed for turning off the LED for the USB 3.0 Blackfly
         
-        dc1394_video_set_transmission(_camera, DC1394_OFF);
-        dc1394_capture_stop(_camera);
-        dc1394_camera_set_power(_camera,DC1394_OFF);
-        dc1394_camera_free (_camera);
-        _camera = NULL;
-        dc1394_free (d);
-        d = NULL;
+        [self stopCameraCapture];
+        
+        dispatch_async(cameraDispatchQueue, ^{
+            dc1394_camera_set_power(_camera,DC1394_OFF);
+            dc1394_camera_free (_camera);
+            _camera = NULL;
+            dc1394_free (d);
+            d = NULL;
+        });
     }
     return YES;
 }
@@ -386,28 +390,48 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 
 - (void)captureFrameFromCamera;
 {
-    int err = 0;
-    dc1394video_frame_t * frame;
+    // TODO: A dispatch semaphore to drop frames when one is already being processed
     
-    err = dc1394_capture_dequeue(_camera, DC1394_CAPTURE_POLICY_POLL, &frame);
-    if (err != DC1394_SUCCESS)
-    {
+    dispatch_sync(cameraDispatchQueue, ^{
+        int err = 0;
+        dc1394video_frame_t * frame;
         
-    }
-//    if ((_cameraType == FLEA2G) || (_cameraType == BLACKFLY))
-//    {
-//        //				yuv422_2vuy422_old(frame->image, videoTexturePointer, (NSUInteger)frameSize.width, (NSUInteger)frameSize.height, &currentLuminance);
-//        yuv422_2vuy422(frame->image, _videoTexturePointer, (NSUInteger)_frameSize.width, (NSUInteger)_frameSize.height, &currentLuminance);
-//    }
-//    else
-//    {
-//        uyvy411_2vuy422(frame->image, _videoTexturePointer, (NSUInteger)_frameSize.width, (NSUInteger)_frameSize.height, &currentLuminance);
-//    }
-    
-    yuv422_2vuy422(frame->image, frameMemory, (unsigned int)_frameSize.width, (unsigned int)_frameSize.height);
-    dc1394_capture_enqueue(_camera, frame);
-    
-    [self processVideoFrame];
+        err = dc1394_capture_dequeue(_camera, DC1394_CAPTURE_POLICY_POLL, &frame);
+        if (err != DC1394_SUCCESS)
+        {
+            
+        }
+        
+        if (frame->frames_behind > 5)
+        {
+        }
+        while (frame->frames_behind > 2)
+        {
+            dc1394_capture_enqueue(_camera, frame);
+            dc1394_capture_dequeue(_camera, DC1394_CAPTURE_POLICY_POLL, &frame);
+            if (frame == NULL)
+            {
+                break;
+            }
+            else
+            {
+            }
+        }
+    //    if ((_cameraType == FLEA2G) || (_cameraType == BLACKFLY))
+    //    {
+    //        //				yuv422_2vuy422_old(frame->image, videoTexturePointer, (NSUInteger)frameSize.width, (NSUInteger)frameSize.height, &currentLuminance);
+    //        yuv422_2vuy422(frame->image, _videoTexturePointer, (NSUInteger)_frameSize.width, (NSUInteger)_frameSize.height, &currentLuminance);
+    //    }
+    //    else
+    //    {
+    //        uyvy411_2vuy422(frame->image, _videoTexturePointer, (NSUInteger)_frameSize.width, (NSUInteger)_frameSize.height, &currentLuminance);
+    //    }
+        
+        yuv422_2vuy422(frame->image, frameMemory, (unsigned int)_frameSize.width, (unsigned int)_frameSize.height);
+        dc1394_capture_enqueue(_camera, frame);
+        
+        [self processVideoFrame];
+    });
 }
 
 - (void)processVideoFrame;
@@ -446,51 +470,55 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 
 - (void)convertYUVToRGBOutput;
 {
-    [GPUImageContext setActiveShaderProgram:yuvConversionProgram];
-    
-    // TODO: Add output image rotation to this
-    
-    // Upload to YUV texture via direct memory access
-    glBindFramebuffer(GL_FRAMEBUFFER, yuvCorrectionFramebuffer);
-    GLfloat yuvImageHeight = (_frameSize.width * _frameSize.height * 2) / (_frameSize.width * 4);
-    glViewport(0, 0, (GLfloat)_frameSize.width, yuvImageHeight);
-    
-    static const GLfloat squareVertices[] = {
-        -1.0f, -1.0f,
-        1.0f, -1.0f,
-        -1.0f,  1.0f,
-        1.0f,  1.0f,
-    };
-    
-    const GLfloat yuvConversionCoordinates[] = {
-        0.0, 0.0,
-        _frameSize.width, 0.0,
-        0.0, yuvImageHeight,
-        _frameSize.width, yuvImageHeight
-    };
+    runSynchronouslyOnVideoProcessingQueue(^{
+        [GPUImageContext useImageProcessingContext];
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        [GPUImageContext setActiveShaderProgram:yuvConversionProgram];
+        
+        // TODO: Add output image rotation to this
+        
+        // Upload to YUV texture via direct memory access
+        glBindFramebuffer(GL_FRAMEBUFFER, yuvCorrectionFramebuffer);
+        GLfloat yuvImageHeight = (_frameSize.width * _frameSize.height * 2) / (_frameSize.width * 4);
+        glViewport(0, 0, (GLfloat)_frameSize.width, yuvImageHeight);
+        
+        static const GLfloat squareVertices[] = {
+            -1.0f, -1.0f,
+            1.0f, -1.0f,
+            -1.0f,  1.0f,
+            1.0f,  1.0f,
+        };
+        
+        const GLfloat yuvConversionCoordinates[] = {
+            0.0, 0.0,
+            _frameSize.width, 0.0,
+            0.0, yuvImageHeight,
+            _frameSize.width, yuvImageHeight
+        };
 
-    glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, yuvUploadTexture);
-    glTexSubImage2D (GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, _frameSize.width, yuvImageHeight, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, frameMemory);
-    glUniform1i(yuvConversionInputTextureUniform, 4);
-    
-    glVertexAttribPointer(yuvConversionPositionAttribute, 2, GL_FLOAT, 0, 0, squareVertices);
-    glVertexAttribPointer(yuvConversionTextureCoordinateAttribute, 2, GL_FLOAT, 0, 0, yuvConversionCoordinates);
-    
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    
-    // After byte reordering and colorspace correction, pull down bytes of the target texture
-    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, correctedYUVTexture);
-    glGetTexImage(GL_TEXTURE_RECTANGLE_EXT, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, correctedFrameMemory);
-    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, 0);
-    
-    // Reupload those bytes into a YUV422 texture for subsequent processing
-    glBindTexture(GL_TEXTURE_2D, reuploadedYUVTexture);
-    glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, _frameSize.width, _frameSize.height, GL_YCBCR_422_APPLE, GL_UNSIGNED_SHORT_8_8_REV_APPLE, correctedFrameMemory);
-    glBindTexture(GL_TEXTURE_2D, 0);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_RECTANGLE_EXT, yuvUploadTexture);
+        glTexSubImage2D (GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, _frameSize.width, yuvImageHeight, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, frameMemory);
+        glUniform1i(yuvConversionInputTextureUniform, 4);
+        
+        glVertexAttribPointer(yuvConversionPositionAttribute, 2, GL_FLOAT, 0, 0, squareVertices);
+        glVertexAttribPointer(yuvConversionTextureCoordinateAttribute, 2, GL_FLOAT, 0, 0, yuvConversionCoordinates);
+        
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        
+        // After byte reordering and colorspace correction, pull down bytes of the target texture
+        glBindTexture(GL_TEXTURE_RECTANGLE_EXT, correctedYUVTexture);
+        glGetTexImage(GL_TEXTURE_RECTANGLE_EXT, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, correctedFrameMemory);
+        glBindTexture(GL_TEXTURE_RECTANGLE_EXT, 0);
+        
+        // Reupload those bytes into a YUV422 texture for subsequent processing
+        glBindTexture(GL_TEXTURE_2D, reuploadedYUVTexture);
+        glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, _frameSize.width, _frameSize.height, GL_YCBCR_422_APPLE, GL_UNSIGNED_SHORT_8_8_REV_APPLE, correctedFrameMemory);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    });
 }
 
 - (void)updateTargetsForVideoCameraUsingCacheTextureAtWidth:(int)bufferWidth height:(int)bufferHeight time:(CMTime)currentTime;
@@ -540,74 +568,82 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 
 - (void)initializeUploadTextureForSize:(CGSize)textureSize;
 {
-    // TODO: Deal with colorspace sizes other than YUV422
-    frameMemory = (unsigned char *)malloc(textureSize.width * textureSize.height * 2);
-    correctedFrameMemory = (unsigned char *)malloc(textureSize.width * textureSize.height * 2);
+    runSynchronouslyOnVideoProcessingQueue(^{
+        [GPUImageContext useImageProcessingContext];
 
-    GLfloat yuvImageHeight = (textureSize.width * textureSize.height * 2) / (_frameSize.width * 4);
+        // TODO: Deal with colorspace sizes other than YUV422
+        frameMemory = (unsigned char *)malloc(textureSize.width * textureSize.height * 2);
+        correctedFrameMemory = (unsigned char *)malloc(textureSize.width * textureSize.height * 2);
 
-    // Create the initial upload texture direct from the camera
-    glActiveTexture(GL_TEXTURE3);
-    glGenTextures(1, &yuvUploadTexture);
-    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, yuvUploadTexture);
-    glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, textureSize.width * textureSize.height * 2, frameMemory);
-    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE , GL_STORAGE_SHARED_APPLE);
-    
-    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    
-    glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, textureSize.width, yuvImageHeight, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, frameMemory);
-    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, 0);
+        GLfloat yuvImageHeight = (textureSize.width * textureSize.height * 2) / (_frameSize.width * 4);
 
-    // Create the output texture for colorspace swizzling and range correction
-    glActiveTexture(GL_TEXTURE4);
-    glGenTextures(1, &correctedYUVTexture);
-    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, correctedYUVTexture);
-    glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, textureSize.width * textureSize.height * 2, correctedFrameMemory);
-    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE , GL_STORAGE_SHARED_APPLE);
-    
-    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    
-    glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, textureSize.width, yuvImageHeight, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, correctedFrameMemory);
-    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, 0);
+        // Create the initial upload texture direct from the camera
+        glActiveTexture(GL_TEXTURE3);
+        glGenTextures(1, &yuvUploadTexture);
+        glBindTexture(GL_TEXTURE_RECTANGLE_EXT, yuvUploadTexture);
+        glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, textureSize.width * textureSize.height * 2, frameMemory);
+        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE , GL_STORAGE_SHARED_APPLE);
+        
+        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        
+        glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, textureSize.width, yuvImageHeight, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, frameMemory);
+        glBindTexture(GL_TEXTURE_RECTANGLE_EXT, 0);
 
-    glGenFramebuffers(1, &yuvCorrectionFramebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, yuvCorrectionFramebuffer);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE_EXT, correctedYUVTexture, 0);
+        // Create the output texture for colorspace swizzling and range correction
+        glActiveTexture(GL_TEXTURE4);
+        glGenTextures(1, &correctedYUVTexture);
+        glBindTexture(GL_TEXTURE_RECTANGLE_EXT, correctedYUVTexture);
+        glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, textureSize.width * textureSize.height * 2, correctedFrameMemory);
+        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE , GL_STORAGE_SHARED_APPLE);
+        
+        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        
+        glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, textureSize.width, yuvImageHeight, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, correctedFrameMemory);
+        glBindTexture(GL_TEXTURE_RECTANGLE_EXT, 0);
 
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    NSAssert(status == GL_FRAMEBUFFER_COMPLETE, @"Incomplete filter FBO: %d", status);
-    
-    // Create the memory-mapped reupload texture for taking the corrected BGRA texture and putting its bytes into a YUV texture
-    glActiveTexture(GL_TEXTURE2);
-    glGenTextures(1, &reuploadedYUVTexture);
-    glBindTexture(GL_TEXTURE_2D, reuploadedYUVTexture);
-    glTextureRangeAPPLE(GL_TEXTURE_2D, textureSize.width * textureSize.height * 2, correctedFrameMemory);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_STORAGE_HINT_APPLE , GL_STORAGE_SHARED_APPLE);
-    
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureSize.width, textureSize.height, 0, GL_YCBCR_422_APPLE, GL_UNSIGNED_SHORT_8_8_REV_APPLE, correctedFrameMemory);
-    glBindTexture(GL_TEXTURE_2D, 0);
+        glGenFramebuffers(1, &yuvCorrectionFramebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, yuvCorrectionFramebuffer);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE_EXT, correctedYUVTexture, 0);
 
-    outputFramebuffer = [[GPUImageFramebuffer alloc] initWithSize:textureSize overriddenTexture:reuploadedYUVTexture];
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        NSAssert(status == GL_FRAMEBUFFER_COMPLETE, @"Incomplete filter FBO: %d", status);
+        
+        // Create the memory-mapped reupload texture for taking the corrected BGRA texture and putting its bytes into a YUV texture
+        glActiveTexture(GL_TEXTURE2);
+        glGenTextures(1, &reuploadedYUVTexture);
+        glBindTexture(GL_TEXTURE_2D, reuploadedYUVTexture);
+        glTextureRangeAPPLE(GL_TEXTURE_2D, textureSize.width * textureSize.height * 2, correctedFrameMemory);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_STORAGE_HINT_APPLE , GL_STORAGE_SHARED_APPLE);
+        
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureSize.width, textureSize.height, 0, GL_YCBCR_422_APPLE, GL_UNSIGNED_SHORT_8_8_REV_APPLE, correctedFrameMemory);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        outputFramebuffer = [[GPUImageFramebuffer alloc] initWithSize:textureSize overriddenTexture:reuploadedYUVTexture];
+    });
 }
 
 - (void)deallocateUploadTexture;
 {
-    glDeleteTextures(1, &yuvUploadTexture);
-    free(frameMemory);
+    runSynchronouslyOnVideoProcessingQueue(^{
+        [GPUImageContext useImageProcessingContext];
+
+        glDeleteTextures(1, &yuvUploadTexture);
+        free(frameMemory);
+    });
 }
 
 - (CGFloat)averageFrameDurationDuringCapture;
@@ -629,18 +665,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
         currentFrameTime = CMTimeAdd(currentFrameTime, CMTimeMakeWithSeconds(diff, 600));
         actualTimeOfLastUpdate = now;
     }
-}
-
-- (void)checkBufferMemory
-{
-    // Checking to see if the buffer memory is null. If not, we release it and bind it. If it is null, we simply bind it.
-    if (frameMemory != NULL) {
-        [self deallocateUploadTexture];
-        [self initializeUploadTextureForSize:_frameSize];
-    } else {
-        [self initializeUploadTextureForSize:_frameSize];
-    }
-    
 }
 
 #pragma mark -
@@ -1011,17 +1035,15 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 
 - (void)setVideoMode:(dc1394video_mode_t)newMode;
 {
+    if (![self supportsVideoMode:newMode]) {
+        NSLog(@"video mode was not supported");
+        return;
+    }
     dispatch_async(cameraDispatchQueue, ^{
         NSLog(@"Set Video Mode Called");
         NSLog(@"New Mode in setVideoMode: %i", newMode);
-        if (![self supportsVideoMode:newMode]) {
-            NSLog(@"video mode was not supported");
-        }
-        else
-        {
-            // Set the video mode
-            NSLog(@"Trying to set the video mode");
-            dc1394_video_set_mode(_camera, newMode);
+
+        dc1394_video_set_mode(_camera, newMode);
             
             if (newMode < 88) {
                 
@@ -1125,7 +1147,55 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                 
             }
             
-            [self checkBufferMemory];
+            switch (self.videoMode) {
+                case DC1394_VIDEO_MODE_160x120_YUV444:
+                    self.frameSize = CGSizeMake(160, 120);
+                    break;
+                    
+                case DC1394_VIDEO_MODE_320x240_YUV422:
+                    self.frameSize = CGSizeMake(320, 240);
+                    break;
+                    
+                case DC1394_VIDEO_MODE_640x480_YUV411:
+                case DC1394_VIDEO_MODE_640x480_YUV422:
+                case DC1394_VIDEO_MODE_640x480_RGB8:
+                case DC1394_VIDEO_MODE_640x480_MONO8:
+                case DC1394_VIDEO_MODE_640x480_MONO16:
+                    self.frameSize = CGSizeMake(640, 480);
+                    break;
+                    
+                case DC1394_VIDEO_MODE_800x600_YUV422:
+                case DC1394_VIDEO_MODE_800x600_RGB8:
+                case DC1394_VIDEO_MODE_800x600_MONO8:
+                case DC1394_VIDEO_MODE_800x600_MONO16:
+                    self.frameSize = CGSizeMake(800, 600);
+                    break;
+                    
+                case DC1394_VIDEO_MODE_1024x768_YUV422:
+                case DC1394_VIDEO_MODE_1024x768_RGB8:
+                case DC1394_VIDEO_MODE_1024x768_MONO8:
+                case DC1394_VIDEO_MODE_1024x768_MONO16:
+                    self.frameSize = CGSizeMake(1024, 768);
+                    break;
+                    
+                case DC1394_VIDEO_MODE_1280x960_YUV422:
+                case DC1394_VIDEO_MODE_1280x960_RGB8:
+                case DC1394_VIDEO_MODE_1280x960_MONO8:
+                case DC1394_VIDEO_MODE_1280x960_MONO16:
+                    self.frameSize = CGSizeMake(1280, 960);
+                    break;
+                    
+                case DC1394_VIDEO_MODE_1600x1200_YUV422:
+                case DC1394_VIDEO_MODE_1600x1200_RGB8:
+                case DC1394_VIDEO_MODE_1600x1200_MONO8:
+                case DC1394_VIDEO_MODE_1600x1200_MONO16:
+                    self.frameSize = CGSizeMake(1600, 1200);
+                    break;
+                    
+                default:
+                    // This is where the unhandled case DC1394_VIDEO_MODE_EXIF would fall. -JKC
+                    break;
+            }
         }
     });
     
@@ -1136,8 +1206,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
             // Believe this is all necessary to guarantee solid USB 3.0 connections
             dispatch_async(cameraDispatchQueue, ^{
                 dc1394_format7_set_packet_size(self.camera, DC1394_VIDEO_MODE_FORMAT7_0, 4000);
-                dc1394_format7_set_color_coding(self.camera, DC1394_VIDEO_MODE_FORMAT7_0, DC1394_COLOR_CODING_YUV422);
-                dc1394_format7_set_image_size(self.camera, DC1394_VIDEO_MODE_FORMAT7_0, 644, 482);
             });
         }
     }
@@ -1149,9 +1217,8 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     
     dispatch_async(cameraDispatchQueue, ^{
         dc1394_video_get_mode(_camera, &currentMode);
+        NSLog(@"current video mode: %i", currentMode);
     });
-    
-    NSLog(@"current video mode: %i", currentMode);
     
     return currentMode;
 }
@@ -1227,20 +1294,36 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 
 - (void)setRegionOfInterest:(CGRect)newValue
 {
+    NSLog(@"Video Mode being sent to set the image size: %i", self.videoMode);
+    if (self.videoMode > 87)
+    {
+        // Throw an exception because it is not Format 7
+        NSAssert(false, @"Video Format Is Not Format 7");
+    }
+    
     dispatch_async(cameraDispatchQueue, ^{
-        NSLog(@"Video Mode being sent to set the image size: %i", self.videoMode);
-        if (self.videoMode > 87) {
-            // Throw an exception because it is not Format 7
-            NSException* myException = [NSException
-                                        exceptionWithName:@"VideoFormatIsNotFormat7"
-                                        reason:@"Video Format Is Not Format 7"
-                                        userInfo:nil];
-            @throw myException;
-            
-        } else {
-            dc1394_format7_set_image_size(_camera, self.videoMode, newValue.size.width, newValue.size.height);
-            [self checkBufferMemory];
+        if (isBlackflyCamera)
+        {
+            dc1394_format7_set_color_coding(_camera, DC1394_VIDEO_MODE_FORMAT7_0, DC1394_COLOR_CODING_YUV422);
+            dc1394_format7_set_image_size(_camera, DC1394_VIDEO_MODE_FORMAT7_0, 644, 482);
+            self.frameSize = CGSizeMake(644,482);
         }
+        else
+        {
+            uint32_t bpp;
+            if (dc1394_format7_get_recommended_packet_size(_camera, DC1394_VIDEO_MODE_FORMAT7_0, &bpp)!=DC1394_SUCCESS)
+            {
+                NSLog(@"Camera: Can't get recommanded bpp, using DC1394_USE_MAX_AVAIL");
+            }
+
+            dc1394_format7_set_roi(_camera, DC1394_VIDEO_MODE_FORMAT7_0,
+                                         DC1394_COLOR_CODING_YUV422,
+                                         bpp, // use recommended packet size
+                                         newValue.origin.x, newValue.origin.y, // left, top
+                                         newValue.size.width, newValue.size.height);
+            self.frameSize = newValue.size;
+        }
+        
     });
 }
 
@@ -1255,6 +1338,18 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     });
     
     return CGRectMake((width / 2), (height / 2), width, height);
+}
+
+- (void)setFrameSize:(CGSize)newValue;
+{
+    _frameSize = newValue;
+    
+    if (frameMemory != NULL) {
+        [self deallocateUploadTexture];
+        [self initializeUploadTextureForSize:_frameSize];
+    } else {
+        [self initializeUploadTextureForSize:_frameSize];
+    }
 }
 
 @end

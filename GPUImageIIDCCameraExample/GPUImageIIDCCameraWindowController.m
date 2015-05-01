@@ -42,6 +42,7 @@
         iidcCamera.regionOfInterest = CGRectMake(322, 241, 644.0, 482.0);
         iidcCamera.operationMode = DC1394_OPERATION_MODE_1394B;
         iidcCamera.isoSpeed = DC1394_ISO_SPEED_800;
+        [iidcCamera turnOnLEDLight];
     } else {
         NSLog(@"Video mode was not supported and camera could not be set up.");
     }
