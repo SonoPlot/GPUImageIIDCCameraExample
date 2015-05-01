@@ -50,7 +50,7 @@
         // Unibrain Fire-I test camera
         iidcCamera.operationMode = DC1394_OPERATION_MODE_LEGACY;
         iidcCamera.isoSpeed = DC1394_ISO_SPEED_400;
-        iidcCamera.fps = DC1394_FRAMERATE_30;
+        iidcCamera.framerate = DC1394_FRAMERATE_30;
         iidcCamera.videoMode = DC1394_VIDEO_MODE_640x480_YUV411;
     }
     

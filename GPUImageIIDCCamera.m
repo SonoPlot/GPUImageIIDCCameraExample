@@ -1203,15 +1203,14 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     return whiteBalanceV;
 }
 
-
-- (void)setFps:(dc1394framerate_t)newValue
+- (void)setFramerate:(dc1394framerate_t)newValue
 {
     dispatch_async(cameraDispatchQueue, ^{
         dc1394_video_set_framerate(_camera, newValue);
     });
 }
 
-- (dc1394framerate_t)fps
+- (dc1394framerate_t)framerate
 {
     __block dc1394framerate_t currentRate;
     
