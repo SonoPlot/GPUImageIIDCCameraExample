@@ -1074,6 +1074,55 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                         // This is where the unhandled case DC1394_VIDEO_MODE_EXIF would fall. -JKC
                         break;
                 }
+                
+                switch (self.videoMode) {
+                    case DC1394_VIDEO_MODE_160x120_YUV444:
+                        self.colorCode = DC1394_COLOR_CODING_YUV444;
+                        break;
+                        
+                    case DC1394_VIDEO_MODE_320x240_YUV422:
+                    case DC1394_VIDEO_MODE_640x480_YUV422:
+                    case DC1394_VIDEO_MODE_800x600_YUV422:
+                    case DC1394_VIDEO_MODE_1024x768_YUV422:
+                    case DC1394_VIDEO_MODE_1280x960_YUV422:
+                    case DC1394_VIDEO_MODE_1600x1200_YUV422:
+                        self.colorCode = DC1394_COLOR_CODING_YUV422;
+                        break;
+                        
+                    case DC1394_VIDEO_MODE_640x480_YUV411:
+                        self.colorCode = DC1394_COLOR_CODING_YUV411;
+                        break;
+                        
+                    case DC1394_VIDEO_MODE_640x480_RGB8:
+                    case DC1394_VIDEO_MODE_800x600_RGB8:
+                    case DC1394_VIDEO_MODE_1024x768_RGB8:
+                    case DC1394_VIDEO_MODE_1280x960_RGB8:
+                    case DC1394_VIDEO_MODE_1600x1200_RGB8:
+                        self.colorCode = DC1394_COLOR_CODING_RGB8;
+                        break;
+                        
+                    case DC1394_VIDEO_MODE_640x480_MONO8:
+                    case DC1394_VIDEO_MODE_800x600_MONO8:
+                    case DC1394_VIDEO_MODE_1024x768_MONO8:
+                    case DC1394_VIDEO_MODE_1280x960_MONO8:
+                    case DC1394_VIDEO_MODE_1600x1200_MONO8:
+                        self.colorCode = DC1394_COLOR_CODING_MONO8;
+                        break;
+                        
+                    case DC1394_VIDEO_MODE_640x480_MONO16:
+                    case DC1394_VIDEO_MODE_800x600_MONO16:
+                    case DC1394_VIDEO_MODE_1024x768_MONO16:
+                    case DC1394_VIDEO_MODE_1280x960_MONO16:
+                    case DC1394_VIDEO_MODE_1600x1200_MONO16:
+                        self.colorCode = DC1394_COLOR_CODING_MONO16;
+                        break;
+                        
+                    default:
+                        // This is where the unhandled case DC1394_VIDEO_MODE_EXIF would fall. -JKC
+                        break;
+                        
+                }
+                
             }
             
             [self checkBufferMemory];
