@@ -1029,7 +1029,6 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 {
     dispatch_async(cameraDispatchQueue, ^{
         dc1394_video_set_mode(_camera, newMode);
-        self.videoMode = newMode;
             
             if (newMode <= DC1394_VIDEO_MODE_1600x1200_MONO16) {
                 
@@ -1287,7 +1286,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     } else {
         runAsynchronouslyOnVideoProcessingQueue(^{
             _frameSize = newValue;
-                        
+            
             [GPUImageContext useImageProcessingContext];
             [self initializeUploadTextureForSize:_frameSize];
         });
