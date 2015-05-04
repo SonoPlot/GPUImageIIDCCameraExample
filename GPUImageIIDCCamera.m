@@ -559,82 +559,74 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 
 - (void)initializeUploadTextureForSize:(CGSize)textureSize;
 {
-    runSynchronouslyOnVideoProcessingQueue(^{
-        [GPUImageContext useImageProcessingContext];
+    // TODO: Deal with colorspace sizes other than YUV422
+    frameMemory = (unsigned char *)malloc(textureSize.width * textureSize.height * 2);
+    correctedFrameMemory = (unsigned char *)malloc(textureSize.width * textureSize.height * 2);
 
-        // TODO: Deal with colorspace sizes other than YUV422
-        frameMemory = (unsigned char *)malloc(textureSize.width * textureSize.height * 2);
-        correctedFrameMemory = (unsigned char *)malloc(textureSize.width * textureSize.height * 2);
+    GLfloat yuvImageHeight = (textureSize.width * textureSize.height * 2) / (_frameSize.width * 4);
 
-        GLfloat yuvImageHeight = (textureSize.width * textureSize.height * 2) / (_frameSize.width * 4);
+    // Create the initial upload texture direct from the camera
+    glActiveTexture(GL_TEXTURE3);
+    glGenTextures(1, &yuvUploadTexture);
+    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, yuvUploadTexture);
+    glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, textureSize.width * textureSize.height * 2, frameMemory);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE , GL_STORAGE_SHARED_APPLE);
+    
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    
+    glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, textureSize.width, yuvImageHeight, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, frameMemory);
+    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, 0);
 
-        // Create the initial upload texture direct from the camera
-        glActiveTexture(GL_TEXTURE3);
-        glGenTextures(1, &yuvUploadTexture);
-        glBindTexture(GL_TEXTURE_RECTANGLE_EXT, yuvUploadTexture);
-        glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, textureSize.width * textureSize.height * 2, frameMemory);
-        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE , GL_STORAGE_SHARED_APPLE);
-        
-        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        
-        glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, textureSize.width, yuvImageHeight, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, frameMemory);
-        glBindTexture(GL_TEXTURE_RECTANGLE_EXT, 0);
+    // Create the output texture for colorspace swizzling and range correction
+    glActiveTexture(GL_TEXTURE4);
+    glGenTextures(1, &correctedYUVTexture);
+    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, correctedYUVTexture);
+    glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, textureSize.width * textureSize.height * 2, correctedFrameMemory);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE , GL_STORAGE_SHARED_APPLE);
+    
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    
+    glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, textureSize.width, yuvImageHeight, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, correctedFrameMemory);
+    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, 0);
 
-        // Create the output texture for colorspace swizzling and range correction
-        glActiveTexture(GL_TEXTURE4);
-        glGenTextures(1, &correctedYUVTexture);
-        glBindTexture(GL_TEXTURE_RECTANGLE_EXT, correctedYUVTexture);
-        glTextureRangeAPPLE(GL_TEXTURE_RECTANGLE_EXT, textureSize.width * textureSize.height * 2, correctedFrameMemory);
-        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_STORAGE_HINT_APPLE , GL_STORAGE_SHARED_APPLE);
-        
-        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        
-        glTexImage2D(GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA, textureSize.width, yuvImageHeight, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, correctedFrameMemory);
-        glBindTexture(GL_TEXTURE_RECTANGLE_EXT, 0);
+    glGenFramebuffers(1, &yuvCorrectionFramebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, yuvCorrectionFramebuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE_EXT, correctedYUVTexture, 0);
 
-        glGenFramebuffers(1, &yuvCorrectionFramebuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, yuvCorrectionFramebuffer);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE_EXT, correctedYUVTexture, 0);
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    NSAssert(status == GL_FRAMEBUFFER_COMPLETE, @"Incomplete filter FBO: %d", status);
+    
+    // Create the memory-mapped reupload texture for taking the corrected BGRA texture and putting its bytes into a YUV texture
+    glActiveTexture(GL_TEXTURE2);
+    glGenTextures(1, &reuploadedYUVTexture);
+    glBindTexture(GL_TEXTURE_2D, reuploadedYUVTexture);
+    glTextureRangeAPPLE(GL_TEXTURE_2D, textureSize.width * textureSize.height * 2, correctedFrameMemory);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_STORAGE_HINT_APPLE , GL_STORAGE_SHARED_APPLE);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureSize.width, textureSize.height, 0, GL_YCBCR_422_APPLE, GL_UNSIGNED_SHORT_8_8_REV_APPLE, correctedFrameMemory);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        NSAssert(status == GL_FRAMEBUFFER_COMPLETE, @"Incomplete filter FBO: %d", status);
-        
-        // Create the memory-mapped reupload texture for taking the corrected BGRA texture and putting its bytes into a YUV texture
-        glActiveTexture(GL_TEXTURE2);
-        glGenTextures(1, &reuploadedYUVTexture);
-        glBindTexture(GL_TEXTURE_2D, reuploadedYUVTexture);
-        glTextureRangeAPPLE(GL_TEXTURE_2D, textureSize.width * textureSize.height * 2, correctedFrameMemory);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_STORAGE_HINT_APPLE , GL_STORAGE_SHARED_APPLE);
-        
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureSize.width, textureSize.height, 0, GL_YCBCR_422_APPLE, GL_UNSIGNED_SHORT_8_8_REV_APPLE, correctedFrameMemory);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        outputFramebuffer = [[GPUImageFramebuffer alloc] initWithSize:textureSize overriddenTexture:reuploadedYUVTexture];
-    });
+    outputFramebuffer = [[GPUImageFramebuffer alloc] initWithSize:textureSize overriddenTexture:reuploadedYUVTexture];
 }
 
 - (void)deallocateUploadTexture;
 {
-    runSynchronouslyOnVideoProcessingQueue(^{
-        [GPUImageContext useImageProcessingContext];
-
-        glDeleteTextures(1, &yuvUploadTexture);
-        free(frameMemory);
-    });
+    glDeleteTextures(1, &yuvUploadTexture);
+    free(frameMemory);
 }
 
 - (CGFloat)averageFrameDurationDuringCapture;
@@ -1037,10 +1029,11 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 {
     dispatch_async(cameraDispatchQueue, ^{
         dc1394_video_set_mode(_camera, newMode);
+        self.videoMode = newMode;
             
-            if (newMode < 88) {
+            if (newMode <= DC1394_VIDEO_MODE_1600x1200_MONO16) {
                 
-                switch (self.videoMode) {
+                switch (newMode) {
                     case DC1394_VIDEO_MODE_160x120_YUV444:
                         self.frameSize = CGSizeMake(160, 120);
                         break;
@@ -1090,8 +1083,7 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
                         break;
                 }
                 
-                // TODO: Ask Brad where this needs to be used and so forth because right not this goes to a dead end. -JKC
-                switch (self.videoMode) {
+                switch (newMode) {
                     case DC1394_VIDEO_MODE_160x120_YUV444:
                         _colorspace = DC1394_COLOR_CODING_YUV444;
                         break;
@@ -1283,13 +1275,22 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
 
 - (void)setFrameSize:(CGSize)newValue;
 {
-    _frameSize = newValue;
-    
     if (frameMemory != NULL) {
-        [self deallocateUploadTexture];
-        [self initializeUploadTextureForSize:_frameSize];
+        runAsynchronouslyOnVideoProcessingQueue(^{
+            _frameSize = newValue;
+            
+            [GPUImageContext useImageProcessingContext];
+            
+            [self deallocateUploadTexture];
+            [self initializeUploadTextureForSize:_frameSize];
+        });
     } else {
-        [self initializeUploadTextureForSize:_frameSize];
+        runAsynchronouslyOnVideoProcessingQueue(^{
+            _frameSize = newValue;
+                        
+            [GPUImageContext useImageProcessingContext];
+            [self initializeUploadTextureForSize:_frameSize];
+        });
     }
 }
 
