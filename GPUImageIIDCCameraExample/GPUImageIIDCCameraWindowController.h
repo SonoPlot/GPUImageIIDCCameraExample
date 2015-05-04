@@ -11,13 +11,12 @@ typedef enum  { UNIBRAIN, FLEA2G, BLACKFLY} SPCameraType;
     GPUImageMovieWriter *movieWriter;
     
     GPUImageIIDCCamera *iidcCamera;
-    
-    
 }
 
-@property (weak) IBOutlet NSButton *imageCaptureButton;
 @property (weak) IBOutlet GPUImageView *videoView;
 @property(readonly) SPCameraType cameraType;
+@property (weak) IBOutlet NSSlider *saturationSlider;
 
+- (IBAction)SaturationLevelSlider:(id)sender;
 
 @end

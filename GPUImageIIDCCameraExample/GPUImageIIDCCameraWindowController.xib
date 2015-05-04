@@ -6,6 +6,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="GPUImageIIDCCameraWindowController">
             <connections>
+                <outlet property="saturationSlider" destination="FoH-Pa-hha" id="X8m-sO-eMe"/>
                 <outlet property="videoView" destination="0Vy-ax-mxz" id="r39-Wj-MSn"/>
                 <outlet property="window" destination="F0z-JX-Cv5" id="gIp-Ho-8D9"/>
             </connections>
@@ -24,11 +25,11 @@
                     <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0Vy-ax-mxz" customClass="GPUImageView">
                         <rect key="frame" x="20" y="114" width="640" height="480"/>
                     </customView>
-                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3HS-SQ-JOx">
-                        <rect key="frame" x="18" y="49" width="644" height="21"/>
-                        <sliderCell key="cell" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="fn0-KK-tE3"/>
+                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="FoH-Pa-hha">
+                        <rect key="frame" x="18" y="45" width="644" height="21"/>
+                        <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="GuK-Zx-c6w"/>
                         <connections>
-                            <action selector="luminanceSetter:" target="-2" id="IAQ-h9-Nq3"/>
+                            <action selector="SaturationLevelSlider:" target="-2" id="mwv-cU-cX8"/>
                         </connections>
                     </slider>
                 </subviews>

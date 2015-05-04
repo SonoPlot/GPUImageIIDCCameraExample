@@ -151,4 +151,9 @@
     });
 }
 
+- (IBAction)SaturationLevelSlider:(id)sender {
+//    iidcCamera.saturation = self.saturationSlider.integerValue;
+    dc1394_feature_set_value(iidcCamera.camera, DC1394_FEATURE_SATURATION, (uint32_t)self.saturationSlider.integerValue);
+}
+
 @end
