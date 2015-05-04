@@ -62,37 +62,26 @@ void uyvy411_2vuy422(const unsigned char *the411Frame, unsigned char *the422Fram
     register unsigned int y0, y1, y2, y3, u, v;
     unsigned int totalPasses = numPixels * 3/2;
     
-    unsigned int luminanceTotal = 0;
-    unsigned int luminanceSamples = 0;
-    
     while (i < totalPasses )
     {
         // Read in the IYU1 (Y411) colorspace from the firewire frames
         // U Y0 Y1 V Y2 Y3
-        u = the411Frame[i++]-128;
+        u = the411Frame[i++];
         y0 = the411Frame[i++];
         y1 = the411Frame[i++];
-        v = the411Frame[i++]-128;
+        v = the411Frame[i++];
         y2 = the411Frame[i++];
         y3 = the411Frame[i++];
         
-        luminanceTotal += y0 + y1 + y2 + y3;
-        luminanceSamples +=4 ;
-        
-        // Remap the values to 2VUY (YUYS?) (Y422) colorspace for OpenGL
-        // Y0 U Y1 V Y2 U Y3 V
-        
-        // IIDC cameras are full-range y=[0..255], u,v=[-127..+127], where display is "video range" (y=[16..240], u,v=[16..236])
-        
-        /* Old, unflipped version*/
-        the422Frame[j++] = (((y0 * 240) >> 8) + 16);
-        the422Frame[j++] = (((u * 236) >> 8) + 128);
-        the422Frame[j++] = (((y1 * 240) >> 8) + 16);
-        the422Frame[j++] = (((v * 236) >> 8) + 128);
-        the422Frame[j++] = (((y2 * 240) >> 8) + 16);
-        the422Frame[j++] = (((u * 236) >> 8) + 128);
-        the422Frame[j++] = (((y3 * 240) >> 8) + 16);
-        the422Frame[j++] = (((v * 236) >> 8) + 128);
+        // Output to the 422 color mapping used for other YUV422 cameras
+        the422Frame[j++] = u;
+        the422Frame[j++] = y0;
+        the422Frame[j++] = v;
+        the422Frame[j++] = y1;
+        the422Frame[j++] = u;
+        the422Frame[j++] = y2;
+        the422Frame[j++] = v;
+        the422Frame[j++] = y3;
     }
 }
 
