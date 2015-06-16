@@ -264,6 +264,7 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
 - (void)stopCameraCapture;
 {
     dispatch_async(cameraDispatchQueue, ^{
+        cameraActive = NO;
         if (dc1394_video_set_transmission(_camera,DC1394_OFF) != DC1394_SUCCESS)
         {
             NSLog(@"Error in setting transmission on");
@@ -308,7 +309,8 @@ NSString *const GPUImageCameraErrorDomain = @"com.sunsetlakesoftware.GPUImage.GP
     {
         NSLog(@"Error in setting transmission on");
     }
- 
+    cameraActive = YES;
+    
     if (cameraFrameCallbackThread == nil)
     {
         cameraFrameCallbackThread = [NSThread currentThread];
@@ -367,13 +369,17 @@ static void cameraFrameReadyCallback(dc1394camera_t *camera, void *cameraObject)
     // TODO: A dispatch semaphore to drop frames when one is already being processed
     
     dispatch_sync(cameraDispatchQueue, ^{
+        if (!cameraActive) {
+            return;
+        }
+        
         int err = 0;
-        dc1394video_frame_t * frame;
+        dc1394video_frame_t *frame = NULL;
         
         err = dc1394_capture_dequeue(_camera, DC1394_CAPTURE_POLICY_POLL, &frame);
-        if (err != DC1394_SUCCESS)
+        if ((err != DC1394_SUCCESS) || (frame == NULL) )
         {
-            
+            return;
         }
         
         if (frame->frames_behind > 5)

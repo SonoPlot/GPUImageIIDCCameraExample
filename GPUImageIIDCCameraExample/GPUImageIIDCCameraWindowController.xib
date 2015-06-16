@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="7531" systemVersion="14D136" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="8121.17" systemVersion="14D136" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="7531"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8121.17"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="GPUImageIIDCCameraWindowController">
@@ -26,12 +26,32 @@
                         <rect key="frame" x="20" y="114" width="640" height="480"/>
                     </customView>
                     <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="FoH-Pa-hha">
-                        <rect key="frame" x="18" y="45" width="644" height="21"/>
+                        <rect key="frame" x="18" y="88" width="644" height="20"/>
                         <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="GuK-Zx-c6w"/>
                         <connections>
                             <action selector="SaturationLevelSlider:" target="-2" id="mwv-cU-cX8"/>
                         </connections>
                     </slider>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8zl-Sn-mo8">
+                        <rect key="frame" x="20" y="19" width="82" height="19"/>
+                        <buttonCell key="cell" type="roundRect" title="On" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="ccT-Ze-Q0j">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="titleBar" size="12"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="onButton:" target="-2" id="iG3-Qi-D4x"/>
+                        </connections>
+                    </button>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tYd-86-fCo">
+                        <rect key="frame" x="578" y="19" width="82" height="19"/>
+                        <buttonCell key="cell" type="roundRect" title="Off" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="a3K-Eb-BGs">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="titleBar" size="12"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="offButton:" target="-2" id="pMT-TN-aR8"/>
+                        </connections>
+                    </button>
                 </subviews>
             </view>
             <connections>

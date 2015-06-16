@@ -54,8 +54,6 @@
         iidcCamera.framerate = DC1394_FRAMERATE_30;
         iidcCamera.videoMode = DC1394_VIDEO_MODE_640x480_YUV411;
     }
-    
-    [iidcCamera startCameraCapture];
         
 }
 
@@ -150,6 +148,15 @@
         });
     });
 }
+
+- (IBAction)onButton:(id)sender {
+    [iidcCamera startCameraCapture];
+}
+
+- (IBAction)offButton:(id)sender {
+    [iidcCamera stopCameraCapture];
+}
+
 
 - (IBAction)SaturationLevelSlider:(id)sender {
 //    iidcCamera.saturation = self.saturationSlider.integerValue;

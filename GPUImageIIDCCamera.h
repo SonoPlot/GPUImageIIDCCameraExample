@@ -37,6 +37,7 @@ extern NSString *const GPUImageCameraErrorDomain;
     float currentLuminance;
     NSUInteger frameIntervalCounter;
     BOOL isBlackflyCamera; // Special-case tweaks for that one camera type
+    BOOL cameraActive;
     
     // libdc1394 variables for the firewire control
     uint32_t numCameras;
